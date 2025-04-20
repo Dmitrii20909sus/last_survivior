@@ -21,7 +21,7 @@ class DB_Manager:
     
     def start(self, message):
         bot.send_message(message.chat.id, "hello")
-        video_path = "C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\Billy.mp4"
+        video_path = "C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\vstuplenie.mp4"
         if os.path.exists(video_path):
          with open(video_path, "rb") as f:
            bot.send_video(message.chat.id, f)
