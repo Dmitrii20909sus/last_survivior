@@ -34,6 +34,9 @@ def work_keyboard(message):
         elif story == 0:
           manager.story_0(message)
 
+@bot.message_handler(func=lambda message: message.text == "Охота")
+def handle_hunt(message):
+    manager.hunt(message)
     
 
 if __name__ == "__main__":
