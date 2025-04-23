@@ -35,8 +35,28 @@ class DB_Manager:
                              wood INTEGER DEFAULT 0,
                              stone INTEGER DEFAULT 0,
                              story INTEGER DEFAULT 0,
-                             last_hunt_time REAL DEFAULT 0)
+                             last_hunt_time REAL DEFAULT 0,
+                             house_lvl INTEGER DEFAULT 0)
                              """)
+            self.conn.execute("DROP TABLE IF EXISTS house")
+            self.conn.execute("""CREATE TABLE IF NOT EXISTS house(
+                              id INTEGER PRIMARY KEY,
+                              level INTEGER,
+                              gold_cost INTEGER,
+                              wood_cost INTEGER,
+                              stone_cost INTEGER)""")
+            
+    def insert_houses(self):
+       houses = [
+          (1, 1, 2, 10, 8),
+          (2, 2, 5, 20, 15),
+          (3, 3, 10, 40, 30),
+          (4, 4, 20, 100, 80),
+          (5, 5, 40, 200, 180)]
+       with self.conn:
+          cur = self.conn.cursor()
+          cur.executemany("""INSERT OR IGNORE INTO house (id, level, gold_cost, wood_cost, stone_cost) VALUES (?, ?, ?, ?, ?)""", houses)
+       
     def select_user(self, message):
        user_id = message.chat.id
        with self.conn:
@@ -59,7 +79,8 @@ class DB_Manager:
               wood = 0
               stone = 0
               story = 0
-              cur.execute('''INSERT INTO users (user_id, username, food, gold, wood, stone, story) VALUES (?, ?, ?, ?, ?, ?, ?)''', (user_id, username, food, gold, wood, stone, story))
+              house_lvl = 0
+              cur.execute('''INSERT INTO users (user_id, username, food, gold, wood, stone, story, house_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', (user_id, username, food, gold, wood, stone, story, house_lvl))
               bot.send_message(user_id, "Данный проект был создан Дмитрием Горским и Родионом Кундянок")
               video_path = "C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\vstuplenie.mp4"
               bot.send_message(user_id, "Вступление загружается, подождите немного.")
@@ -81,9 +102,11 @@ class DB_Manager:
     def story_0(self, message):
        user_id = message.chat.id
        user = self.select_user(message)
+       markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+       markup.add("Профиль", "Охота")
        bot.send_message(user_id, """*Бог:* Здравствуй, сын мой божий. Ты один из единственных, кому удалось пережить это несчастье.""", parse_mode="Markdown")
        time.sleep(2.5)
-       bot.send_message(user_id,"""*Бог:* Ну что-же, для начала награжу ка я тебя как избранного ресурсами, в которых ты сейчас очень нуждаешься, держи 10 кусочков золота🏅, 20 кусков дерева🪵 и 20 камней🪨, с ними ты сможешь построй свой первый дом""", parse_mode="Markdown") 
+       bot.send_message(user_id,"""*Бог:* Ну что-же, для начала награжу ка я тебя как избранного ресурсами, в которых ты сейчас очень нуждаешься, держи 10 кусочков золота🏅, 20 кусков дерева🪵 и 20 камней🪨, с ними ты сможешь построить свой первый дом""", parse_mode="Markdown") 
        time.sleep(2)
        with self.conn:
           cur = self.conn.cursor()
@@ -91,9 +114,9 @@ class DB_Manager:
             UPDATE users SET gold = gold + 10, wood = wood + 20, stone = stone + 20, story = 1 
             WHERE user_id = ?
         """, (user_id,))    
-       bot.send_message(user_id, "<i>Вам зачисленно:</i> +20🏅, +20🪵, +20🪨", parse_mode="HTML")  
+       bot.send_message(user_id, "<i>Вам зачисленно: </i> +20🏅, +20🪵, +20🪨", parse_mode="HTML")  
       
-       bot.send_message(user_id, """*Бог:* Скоро ты построишь себе новый дом, но сначала, иди ка ты на охоту, ты очень голодный, тебе стоило бы поесть, поэтому нажми в меню на кнопку *Охота*, чтобы добыть еды""", parse_mode="Markdown")
+       bot.send_message(user_id, """*Бог:* Скоро ты построишь себе новый дом, но сначала, иди ка ты на охоту, ты очень голодный, тебе стоило бы поесть, поэтому нажми в меню на кнопку *Охота*, чтобы добыть еды""", parse_mode="Markdown", reply_markup=markup)
        
     def hunt(self, message):
        user = self.select_user(message)
@@ -145,36 +168,55 @@ class DB_Manager:
 
        bot.send_message(user_id, msg, parse_mode="HTML")
 
-       with self.conn:
-        self.conn.execute("UPDATE users SET food = food + ?, last hunt_time = ? WHERE user_id = ?", (total_points, now, user_id))
-       if user[6] == 1: 
-        self.conn.execute("UPDATE users SET food = food + ?, last hunt_time = ? WHERE user_id = ?", (total_points, now, user_id))
+       markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+       markup.add("Профиль", "Охота", "Построить дом")
+       self.conn.execute("UPDATE users SET food = food + ?, last_hunt_time = ? WHERE user_id = ?", (total_points, now, user_id))
+       if user[7] == 1: 
         time.sleep(2)
-        bot.send_message(user_id, """*Бог:* Хорошая охота, сын мой. Ты показал, что способен выжить. Теперь тебе стоит подумать о строительстве.""", parse_mode="Markdown")
-        time.sleep(2)
-        bot.send_message(user_id, """*Бог:* Построй себе дом. Для этого тебе понадобятся 10🪵 и 8🪨. Нажми на кнопку *Построить новый дом*""", parse_mode="Markdown")
-
-        #Вот дальше пишу
-    
-    
-    
-       # Ich soll den Markdown Ohota erstellen und dort  2 bis 5 Tiere jagen,
-       # jedes Tier gibt mir bestimmte Anzahl an Punkten die dann alle 
-       # zusammen summiert werden ---> noch eine Tabelle erstellen (Zweri)
-       #Er soll ungefähr so aussehen:
-       #Ihre Beute:
-       # () Krolikov
-       # () Volkov
-       # () Kasul
-       # ...
-       # Ich soll außerdem ein cooldown für die Jagd erstellen
-       # Ich muss den Gottes Text an die richtigen Zeilen setzen
-       # Profil soll auch angezeigt werden
+        if total_points < 10:
+           bot.send_message(user_id, """*Бог:* Мда... Не очень конечно сегодня охота вышла, но ничего, Ещё научишся. Теперь тебе стоит подумать о строительстве твоего дома.""", parse_mode="Markdown")
+        else:
+           bot.send_message(user_id, """*Бог:* Хорошая охота, сын мой. Ты показал, что способен выжить. Теперь тебе стоит подумать о строительстве твоего дома.""", parse_mode="Markdown")
        
+        time.sleep(2)
+        self.conn.execute("UPDATE users SET story = 2 WHERE user_id = ?", (user_id,))
+        bot.send_message(user_id, """*Бог:* Построй себе дом. Для этого тебе понадобятся 2🏅 10🪵 и 8🪨. Нажми на кнопку *Построить дом* в меню""", parse_mode="Markdown", reply_markup=markup)
 
+    def house(self, message):
+        user_id = message.chat.id
+        with self.conn:
+          cur = self.conn.cursor()
+          cur.execute('''SELECT u.gold, u.wood, u.stone, u.house_lvl,  u.story,
+                      h.gold_cost, h.wood_cost, h.stone_cost FROM users u
+                      INNER JOIN house h ON u.house_lvl + 1 = h.level
+                      WHERE u.user_id = ?
+                    ''', (user_id,))
+          data = cur.fetchone()       
+          if data:
+           gold, wood, stone, house_lvl, story, gold_cost, wood_cost, stone_cost = data
+
+           if gold < gold_cost or wood < wood_cost or stone < stone_cost:
+            bot.send_message(user_id, "Недостаточно ресурсов для следующего уровня дома!")
+            return
+
+           cur.execute("""
+           UPDATE users
+           SET gold = gold - ?, wood = wood - ?, stone = stone - ?, house_lvl = house_lvl + 1
+           WHERE user_id = ?
+           """, (gold_cost, wood_cost, stone_cost, user_id))
+
+           bot.send_message(user_id, f"🎉 Вы построили дом уровня {house_lvl + 1}!\nВаш баланс: 🏅 {gold - gold_cost}, 🪵 {wood - wood_cost}, 🪨 {stone - stone_cost}")
+           house_photo = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\lvl{house_lvl + 1}.jpg"
+           if os.path.exists(house_photo):
+               with open(house_photo, "rb") as f:
+                  bot.send_photo(user_id, f)
+                  if story == 2:
+                     bot.send_message(user_id, "*Бог: *Ну чтож, сын мой божий, вот твой первый дом, скромноватый, но жить можно, потом лучше сделаешь. Теперь тебе нужно добыть ресурсов чтобы начать выживать. Теперь нажми на кнопку *Путешествие* чтобы начать, но учти, что ты не можешь отправлятся в путешествие на голодный желудок! *В РАЗРАБОТКЕ!!!!!!!*", parse_mode="Markdown")
              
-
-              
+          else:
+           bot.send_message(user_id, "🏚️ Максимальный уровень дома достигнут.")
+ 
+#Adventure Funktion erstellen; ähnlich wie in minecraft, zombie ist gold, holz ist holz, stein ist stein, dann _food_ Abzug  
 
                 
 
