@@ -38,7 +38,6 @@ class DB_Manager:
                              last_hunt_time REAL DEFAULT 0,
                              house_lvl INTEGER DEFAULT 0)
                              """)
-            self.conn.execute("DROP TABLE IF EXISTS house")
             self.conn.execute("""CREATE TABLE IF NOT EXISTS house(
                               id INTEGER PRIMARY KEY,
                               level INTEGER,
@@ -173,7 +172,7 @@ class DB_Manager:
        self.conn.execute("UPDATE users SET food = food + ?, last_hunt_time = ? WHERE user_id = ?", (total_points, now, user_id))
        if user[7] == 1: 
         time.sleep(2)
-        if total_points < 10:
+        if total_points < 20:
            bot.send_message(user_id, """*Бог:* Мда... Не очень конечно сегодня охота вышла, но ничего, Ещё научишся. Теперь тебе стоит подумать о строительстве твоего дома.""", parse_mode="Markdown")
         else:
            bot.send_message(user_id, """*Бог:* Хорошая охота, сын мой. Ты показал, что способен выжить. Теперь тебе стоит подумать о строительстве твоего дома.""", parse_mode="Markdown")
@@ -211,13 +210,105 @@ class DB_Manager:
                with open(house_photo, "rb") as f:
                   bot.send_photo(user_id, f)
                   if story == 2:
-                     bot.send_message(user_id, "*Бог: *Ну чтож, сын мой божий, вот твой первый дом, скромноватый, но жить можно, потом лучше сделаешь. Теперь тебе нужно добыть ресурсов чтобы начать выживать. Теперь нажми на кнопку *Путешествие* чтобы начать, но учти, что ты не можешь отправлятся в путешествие на голодный желудок! *В РАЗРАБОТКЕ!!!!!!!*", parse_mode="Markdown")
-             
+                     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+                     markup.add("Профиль", "Охота", "Построить дом", "Путешествие")
+                     bot.send_message(user_id, "*Бог: *Ну чтож, сын мой божий, вот твой первый дом, скромноватый, но жить можно, потом лучше сделаешь. Теперь тебе нужно добыть ресурсов чтобы начать выживать. Теперь нажми на кнопку *Путешествие* чтобы начать, но учти, что ты не можешь отправлятся в путешествие на голодный желудок!", parse_mode="Markdown", reply_markup=markup)
+                     cur.execute("""UPDATE users
+                                    SET story = 3""")
+                 
           else:
            bot.send_message(user_id, "🏚️ Максимальный уровень дома достигнут.")
- 
+           
+
+    def adventure(self, message):
+     with self.conn:
+      cur = self.conn.cursor()
+      user_id = message.chat.id
+      player_hp = 6
+      user = self.select_user(message)
+
+
+      if user[7] < 3:
+        bot.send_message(user_id, "Ты ещё не можешь путешествовать.")
+        return
+
+      if user[3] < 20:
+        bot.send_message(user_id, f"Ты голодный, нужно минимум 20 единиц 🍖, а у тебя их {user[3]} ")
+        return
+      
+      events = ["Zombie", "Wood", "Stone"]
+      event = random.choice(events)
+      killed_zombies = 0
+      extracted_gold = 0
+      exctracted_wood = 0
+      extracted_stone = 0
+      #Das alles am ende summieren und ab ins UPDATE 
+      if event == "Zombie":
+        zombie_hp = random.randint(2, 6)
+        zombie_hp_start = zombie_hp
+        letters = ["A", "B", "C", "D", "E", "F"]
+        target_letter = ""
+
+        bot.send_message(user_id, "На вас напал зомби🧟‍♂, защишайтесь!")
+
+        if user[7] == 3:
+            bot.send_message(user_id, "Пиши букву, которая будет задана. Если правильно — урон зомби, иначе — урон тебе.")
+            time.sleep(3)
+            bot.send_message(user_id, "Итак, начнём:")
+
+        def new_letter():
+            nonlocal zombie_hp, player_hp, target_letter
+            target_letter = random.choice(letters)
+            bot.send_message(user_id, f"👉 Напиши букву: {target_letter}")
+            bot.register_next_step_handler(message, fight_step)
+
+        def fight_step(msg):
+            nonlocal zombie_hp, player_hp, target_letter
+            answer = msg.text.strip().upper()
+
+            if not answer or len(answer) != 1:
+                bot.send_message(user_id, "❗ Введи ОДНУ букву.")
+                bot.register_next_step_handler(msg, fight_step)
+                return
+
+            if answer == target_letter:
+                zombie_hp -= 1
+                percent = round(zombie_hp / zombie_hp_start * 100) if zombie_hp > 0 else 0
+                bot.send_message(user_id, f"✅ Бам! У зомби осталось {percent}% HP.")
+            else:
+                player_hp -= 1
+                percent = round(player_hp / 6 * 100) if player_hp > 0 else 0
+                bot.send_message(user_id, f"❌ Ай! У тебя осталось {percent}% HP.")
+
+            if zombie_hp <= 0:
+                coins = zombie_hp_start // 2
+                bot.send_message(user_id, f"🏆 Победа! Ты получил {coins} монет.")
+                
+            elif player_hp <= 0:
+                bot.send_message(user_id, "💀 Ты проиграл! Зомби прокусил твои доспехи.")
+            else:
+                new_letter()
+              
+        new_letter()
+
+      elif event == "Wood":
+        wood_gained = random.randint(1, 3)
+        bot.send_message(user_id, f"Ты нашёл {wood_gained} единиц дерева 🌲.")
+        #INLINE KEY BUTTON + Tutuorial
+      elif event == "Stone":
+        stone_gained = random.randint(1, 2)
+        bot.send_message(user_id, f"Ты нашёл {stone_gained} единиц камня 🪨.")
+       # hier auch
+
+       # bei story 3 folgendes:
+       # 1. Ereignis Zombie, 2. Holz 3. Stein
+
+       # Story mehr als 3 random (2 bis 5, Artifakten erst dann)
+
+       # Gott lässt Nagiev alleine
+
 #Adventure Funktion erstellen; ähnlich wie in minecraft, zombie ist gold,
 #holz ist holz, stein ist stein, dann _food_ Abzug  
 
-                
+                #weiter arbeiten!!!!!!!!!!!!!!!!
 

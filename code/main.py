@@ -26,6 +26,11 @@ def start_command(message):
             markup.add("Профиль", "Охота")
             bot.send_message(user_id, f"""Выберете действие:
             """, reply_markup=markup)
+        if story == 2:
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            markup.add("Профиль", "Охота")
+            bot.send_message(user_id, f"""Выберете действие:
+            """, reply_markup=markup)
 
 @bot.message_handler(func=lambda message: message.text == "Начать сюжет")
 def work_keyboard(message):
@@ -61,6 +66,16 @@ def handle_house(message):
         story = user[7]
         if story >= 2:
          manager.house(message)
+
+@bot.message_handler(func=lambda message: message.text == "Путешествие")
+def handle_house(message):
+    user_id = message.chat.id
+    user = manager.select_user(message)
+
+    if user:
+        story = user[7]
+        if story >= 3:
+         manager.adventure(message)
 
     
 
