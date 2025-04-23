@@ -216,7 +216,8 @@ class DB_Manager:
           else:
            bot.send_message(user_id, "🏚️ Максимальный уровень дома достигнут.")
  
-#Adventure Funktion erstellen; ähnlich wie in minecraft, zombie ist gold, holz ist holz, stein ist stein, dann _food_ Abzug  
+#Adventure Funktion erstellen; ähnlich wie in minecraft, zombie ist gold,
+#holz ist holz, stein ist stein, dann _food_ Abzug  
 
                 
 
