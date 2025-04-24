@@ -31,6 +31,12 @@ def start_command(message):
             markup.add("Профиль", "Охота")
             bot.send_message(user_id, f"""Выберете действие:
             """, reply_markup=markup)
+        if story == 3:
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            markup.add("Профиль", "Охота", "Построить дом", "Путешествие")
+            bot.send_message(user_id, f"""Выберете действие:
+            """, reply_markup=markup)
+
 
 @bot.message_handler(func=lambda message: message.text == "Начать сюжет")
 def work_keyboard(message):

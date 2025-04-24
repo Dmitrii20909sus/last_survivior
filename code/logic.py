@@ -222,93 +222,136 @@ class DB_Manager:
 
     def adventure(self, message):
      with self.conn:
-      cur = self.conn.cursor()
-      user_id = message.chat.id
-      player_hp = 6
-      user = self.select_user(message)
+        cur = self.conn.cursor()
+        user_id = message.chat.id
+        player_hp = 6
+        user = self.select_user(message)
 
+        if user[7] < 3:
+            bot.send_message(user_id, "Ты ещё не можешь путешествовать.")
+            return
 
-      if user[7] < 3:
-        bot.send_message(user_id, "Ты ещё не можешь путешествовать.")
-        return
+        if user[3] < 20:
+            bot.send_message(user_id, f"Ты голодный, нужно минимум 20 единиц 🍖, а у тебя их {user[3]}")
+            return
 
-      if user[3] < 20:
-        bot.send_message(user_id, f"Ты голодный, нужно минимум 20 единиц 🍖, а у тебя их {user[3]} ")
-        return
-      
-      events = ["Zombie", "Wood", "Stone"]
-      event = random.choice(events)
-      killed_zombies = 0
-      extracted_gold = 0
-      exctracted_wood = 0
-      extracted_stone = 0
-      #Das alles am ende summieren und ab ins UPDATE 
-      if event == "Zombie":
-        zombie_hp = random.randint(2, 6)
-        zombie_hp_start = zombie_hp
-        letters = ["A", "B", "C", "D", "E", "F"]
-        target_letter = ""
+        events = ["Zombie", "Wood", "Stone"]
+        killed_zombies = 0
+        extracted_gold = 0
+        extracted_wood = 0
+        extracted_stone = 0
 
-        bot.send_message(user_id, "На вас напал зомби🧟‍♂, защишайтесь!")
+        if user[7] >= 3:
+            event_list = ["Zombie", "Wood", "Stone"]
+        else:
+            foundings = random.randint(2, 5)
+            event_list = [random.choice(events) for _ in range(foundings)]
+        
+        for event in event_list:
+            if player_hp <= 0:
+                break
 
-        if user[7] == 3:
-            bot.send_message(user_id, "Пиши букву, которая будет задана. Если правильно — урон зомби, иначе — урон тебе.")
-            time.sleep(3)
-            bot.send_message(user_id, "Итак, начнём:")
+            if event == "Zombie":
+                zombie_hp = random.randint(2, 6)
+                zombie_hp_start = zombie_hp
+                letters = ["A", "B", "C", "D", "E", "F"]
+                target_letter = ""
 
-        def new_letter():
-            nonlocal zombie_hp, player_hp, target_letter
-            target_letter = random.choice(letters)
-            bot.send_message(user_id, f"👉 Напиши букву: {target_letter}")
-            bot.register_next_step_handler(message, fight_step)
+                bot.send_message(user_id, "На вас напал зомби🧟‍♂, защишайтесь!")
 
-        def fight_step(msg):
-            nonlocal zombie_hp, player_hp, target_letter
-            answer = msg.text.strip().upper()
-
-            if not answer or len(answer) != 1:
-                bot.send_message(user_id, "❗ Введи ОДНУ букву.")
-                bot.register_next_step_handler(msg, fight_step)
-                return
-
-            if answer == target_letter:
-                zombie_hp -= 1
-                percent = round(zombie_hp / zombie_hp_start * 100) if zombie_hp > 0 else 0
-                bot.send_message(user_id, f"✅ Бам! У зомби осталось {percent}% HP.")
-            else:
-                player_hp -= 1
-                percent = round(player_hp / 6 * 100) if player_hp > 0 else 0
-                bot.send_message(user_id, f"❌ Ай! У тебя осталось {percent}% HP.")
-
-            if zombie_hp <= 0:
-                coins = zombie_hp_start // 2
-                bot.send_message(user_id, f"🏆 Победа! Ты получил {coins} монет.")
+                if user[7] == 3:
+                    bot.send_message(user_id, "Пиши букву (*на латыни*), которая будет задана. Если правильно — урон зомби, иначе — урон тебе.", parse_mode="Markdown")
+                    time.sleep(3)
+                    bot.send_message(user_id, "Итак, начнём:")
+        
+                def new_letter():
+                  nonlocal zombie_hp, player_hp, target_letter
+                  target_letter = random.choice(letters)
+                  bot.send_message(user_id, f"👉 Напиши букву: {target_letter}")
+                  bot.register_next_step_handler(message, fight_step)
                 
-            elif player_hp <= 0:
-                bot.send_message(user_id, "💀 Ты проиграл! Зомби прокусил твои доспехи.")
-            else:
-                new_letter()
-              
-        new_letter()
 
-      elif event == "Wood":
-        wood_gained = random.randint(1, 3)
-        bot.send_message(user_id, f"Ты нашёл {wood_gained} единиц дерева 🌲.")
-        #INLINE KEY BUTTON + Tutuorial
-      elif event == "Stone":
-        stone_gained = random.randint(1, 2)
-        bot.send_message(user_id, f"Ты нашёл {stone_gained} единиц камня 🪨.")
-       # hier auch
+                def fight_step(message):
+                  nonlocal zombie_hp, player_hp, target_letter, killed_zombies, extracted_gold
+                  answer = message.text.strip().upper()
 
-       # bei story 3 folgendes:
-       # 1. Ereignis Zombie, 2. Holz 3. Stein
+                  if answer == target_letter:
+                    zombie_hp -= 1
+                    percent = round(zombie_hp / zombie_hp_start * 100) if zombie_hp > 0 else 0
+                    bot.send_message(user_id, f"✅ Бам! У зомби осталось {percent}% HP.")
+                    if zombie_hp  or player_hp <= 0: 
+                      new_letter()
+                  else:
+                   player_hp -= 1
+                   percent = round(player_hp / 6 * 100) if player_hp > 0 else 0
+                   bot.send_message(user_id, f"❌ Ай! У тебя осталось {percent}% HP.")
+                   if zombie_hp  or player_hp <= 0: 
+                      new_letter()
+                   if zombie_hp <= 0:
+                    gold = zombie_hp_start // 2
+                    bot.send_message(user_id, f"🏆 Победа! Ты получил {gold} кусочков золота.")
+                    extracted_gold += gold
+                    killed_zombies += 1 
+                   elif player_hp <= 0:
+                    bot.send_message(user_id, "💀 Ты проиграл! Зомби прокусил твои доспехи.")
+                    time.sleep(2)
+                   if user[7] == 3:
+                    cur.execute(""" UPDATE users SET story = 4 WHERE user_id = ? """,(user_id,))
+                    bot.send_message(user_id, "*Бог: * К сожалению, ты не победил зомби. Но не переживай, это только начало...", parse_mode="Markdown")
+                  
 
-       # Story mehr als 3 random (2 bis 5, Artifakten erst dann)
+                
+                  
+                if player_hp > 0 and zombie_hp > 0:
+                    pass
 
-       # Gott lässt Nagiev alleine
+                if player_hp <= 0:
+                    break  
 
-#Adventure Funktion erstellen; ähnlich wie in minecraft, zombie ist gold,
-#holz ist holz, stein ist stein, dann _food_ Abzug  
+                else:
+                   new_letter()
+            elif event == "Wood":
+                wood_gained = random.randint(2, 7)
+                if user[3] == 3:
+                   bot.send_message(user_id, f"Если ты находишь дерево, ты поличшь случайное количество дров.")
+                bot.send_message(user_id, f"Ты добыл {wood_gained} {'куска' if wood_gained < 5 else 'кусков'} дерева 🌲.")
+                extracted_wood += wood_gained
 
-                #weiter arbeiten!!!!!!!!!!!!!!!!
+            elif event == "Stone":
+                stone_gained = random.randint(2, 5)
+                if user[3] == 3:
+                   bot.send_message(user_id, f"Если ты находишь камень, то как и с деревом ты поличшь случайное количество кусков камня🪨.")
+                bot.send_message(user_id, f"Ты нашёл {stone_gained} {'кусочка ' if wood_gained < 5 else 'кусков '} камней 🪨.")
+                extracted_stone += stone_gained
 
+            time.sleep(2)
+
+      
+        cur.execute("""
+            UPDATE users
+            SET gold = gold + ?, wood = wood + ?, stone = stone + ?, food = food - 20
+            WHERE user_id = ?
+        """, (extracted_gold, extracted_wood, extracted_stone, user_id))
+
+        summary = (
+            f"🌍 Приключение окончено!\n"
+            f"🧟 Убито зомби: {killed_zombies}\n"
+            f"🏅 Найдено золота: {extracted_gold}\n"
+            f"🌲 Найдено дерева: {extracted_wood}\n"
+            f"🪨 Найдено камня: {extracted_stone}\n"
+            f"🍖 -20 еды"
+        )
+        bot.send_message(user_id, summary)
+        
+        if user[7] == 3:
+           time.sleep(2)
+           cur.execute("""
+            UPDATE users
+            SET story = 4
+            WHERE user_id = ?
+        """, (user_id,))
+
+           bot.send_message(user_id, "*Бог: * Хорошее было сегодня приключение, воин!\nТы сражался достойно и вернулся с добычей. Я оставлю тебя на время, иди на охоту, строй дома и развивайся, потом увидишь как судьба с тобой поиграет...", parse_mode="Markdown")
+        
+        
+   # Next step funktion!!!!!!!!
