@@ -36,7 +36,10 @@ class DB_Manager:
                              stone INTEGER DEFAULT 0,
                              story INTEGER DEFAULT 0,
                              last_hunt_time REAL DEFAULT 0,
-                             house_lvl INTEGER DEFAULT 0)
+                             house_lvl INTEGER DEFAULT 0,
+                             weak_spot TEXT,
+                             call_data TEXT
+                             )
                              """)
             self.conn.execute("""CREATE TABLE IF NOT EXISTS house(
                               id INTEGER PRIMARY KEY,
@@ -44,6 +47,7 @@ class DB_Manager:
                               gold_cost INTEGER,
                               wood_cost INTEGER,
                               stone_cost INTEGER)""")
+
             
     def insert_houses(self):
        houses = [
@@ -57,12 +61,18 @@ class DB_Manager:
           cur.executemany("""INSERT OR IGNORE INTO house (id, level, gold_cost, wood_cost, stone_cost) VALUES (?, ?, ?, ?, ?)""", houses)
        
     def select_user(self, message):
-       user_id = message.chat.id
-       with self.conn:
-        cur = self.conn.cursor()
-        cur.execute("SELECT * FROM USERS WHERE user_id = ?", (user_id,))
-        user = cur.fetchone()
-       return user
+        if hasattr(message, 'chat') and message.chat: 
+         user_id = message.chat.id
+        elif hasattr(message, 'message') and hasattr(message.message, 'chat'): 
+         user_id = message.message.chat.id
+        else:
+         raise ValueError("Unknown message type!!!!")
+
+        with self.conn:
+         cur = self.conn.cursor()
+         cur.execute("SELECT * FROM USERS WHERE user_id = ?", (user_id,))
+         user = cur.fetchone()
+        return user
 
     def start(self, message):
         user_id = message.chat.id
@@ -97,7 +107,19 @@ class DB_Manager:
             
            elif user is not None:
               pass
-
+    def profile(self, message):
+       user_id = message.chat.id
+       user = self.select_user(message)
+       if user[9] == 0:
+          house = str("Нету дома")
+       else:
+          house = user[9]
+       bot.send_message(user_id, f"👤 Твой профиль: \n\n 🏆 Золото: {user[4]} \n 🪵 Дерево: {user[5]}\n 🪨 Камень: {user[6]} \n🍗 Еда: {user[3]}\n 🏠 Уровень дома: {house}")
+       if user[9] > 0:
+          house_photo = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\lvl{house}.jpg"
+          with open(house_photo, "rb") as f:
+             bot.send_photo(user_id, f)
+       
     def story_0(self, message):
        user_id = message.chat.id
        user = self.select_user(message)
@@ -137,7 +159,7 @@ class DB_Manager:
        
        bot.send_message(user_id, "🏹 Вы отправились на охоту...")
         
-       results = {animal: 0 for animal in self.animals}
+       self.results = {animal: 0 for animal in self.animals}
        total_points = 0
 
        for i in range(5):
@@ -153,13 +175,13 @@ class DB_Manager:
                 choices.extend([animal] * weight)
 
             caught = random.choice(choices)
-            results[caught] += 1
+            self.results[caught] += 1
             total_points += self.animals[caught]
             bot.send_message(user_id, f"✅ Попытка {i+1}: Пойман {caught} (+{self.animals[caught]} очков)")
 
        
        msg = "<i>📊 Ваша добыча:</i>\n"
-       for animal, count in results.items():
+       for animal, count in self.results.items():
             if count > 0:
                 msg += f"{animal}: {count} шт.\n"
 
@@ -219,8 +241,15 @@ class DB_Manager:
           else:
            bot.send_message(user_id, "🏚️ Максимальный уровень дома достигнут.")
            
-
+    def handle_zombie(self, message):
+       user = self.select_user(message)
+       if user[10] == user[11]:
+           return True
+       else:
+          return False
+       
     def adventure(self, message):
+     first_time = True
      with self.conn:
         cur = self.conn.cursor()
         user_id = message.chat.id
@@ -241,85 +270,116 @@ class DB_Manager:
         extracted_wood = 0
         extracted_stone = 0
 
-        if user[7] >= 3:
+        if user[7] == 3:
             event_list = ["Zombie", "Wood", "Stone"]
         else:
             foundings = random.randint(2, 5)
             event_list = [random.choice(events) for _ in range(foundings)]
         
         for event in event_list:
-            if player_hp <= 0:
-                break
 
             if event == "Zombie":
                 zombie_hp = random.randint(2, 6)
                 zombie_hp_start = zombie_hp
-                letters = ["A", "B", "C", "D", "E", "F"]
-                target_letter = ""
+                weak_spots = ["Голова", "Печень", "Грудь", "Нога"]
+                target_weak_spot = ""
 
                 bot.send_message(user_id, "На вас напал зомби🧟‍♂, защишайтесь!")
-
+                
                 if user[7] == 3:
-                    bot.send_message(user_id, "Пиши букву (*на латыни*), которая будет задана. Если правильно — урон зомби, иначе — урон тебе.", parse_mode="Markdown")
+                    bot.send_message(user_id, "Каждый раз у зомби открытое место. Нажми на правильную кнопку. Если нажмёшь правильно — урон зомби, иначе — урон тебе.", parse_mode="Markdown")
                     time.sleep(3)
                     bot.send_message(user_id, "Итак, начнём:")
-        
-                def new_letter():
-                  nonlocal zombie_hp, player_hp, target_letter
-                  target_letter = random.choice(letters)
-                  bot.send_message(user_id, f"👉 Напиши букву: {target_letter}")
-                  bot.register_next_step_handler(message, fight_step)
-                
-
-                def fight_step(message):
-                  nonlocal zombie_hp, player_hp, target_letter, killed_zombies, extracted_gold
-                  answer = message.text.strip().upper()
-
-                  if answer == target_letter:
+                markup = types.InlineKeyboardMarkup()
+                buttons = [
+                        types.InlineKeyboardButton("Голова", callback_data="head"),
+                        types.InlineKeyboardButton("Печень", callback_data="liver"),
+                        types.InlineKeyboardButton("Грудь", callback_data="chest"),
+                        types.InlineKeyboardButton("Нога", callback_data="leg")
+                        ]
+                markup.add(*buttons)
+                while zombie_hp > 0 and player_hp > 0:
+                     
+                 target_weak_spot = random.choice(weak_spots)
+                 if first_time:
+                        sent_message = bot.send_message(user_id, f"👉 Открытое место: {target_weak_spot}", reply_markup=markup)
+                        message_id = sent_message.message_id
+                        first_time = False
+                 else:
+                        bot.edit_message_text(
+                        chat_id=user_id,
+                        message_id=message_id,
+                        text=f"👉 Открытое место: {target_weak_spot}",
+                        reply_markup=markup) 
+                 self.conn.execute("UPDATE users SET weak_spot = ? WHERE user_id = ?", (target_weak_spot, user_id))
+                 time.sleep(3)
+                 if self.handle_zombie(message) == True:
                     zombie_hp -= 1
                     percent = round(zombie_hp / zombie_hp_start * 100) if zombie_hp > 0 else 0
+                    self.handle_zombie(message) == False 
                     bot.send_message(user_id, f"✅ Бам! У зомби осталось {percent}% HP.")
-                    if zombie_hp  or player_hp <= 0: 
-                      new_letter()
-                  else:
+                    if zombie_hp < 0 or player_hp < 0: 
+                      target_weak_spot = random.choice(weak_spots)
+                      self.handle_zombie(message) == False
+                      if first_time:
+                        sent_message = bot.send_message(user_id, f"👉 Открытое место: {target_weak_spot}", reply_markup=markup)
+                        message_id = sent_message.message_id
+                        first_time = False
+                      else:
+                        bot.edit_message_text(
+                        chat_id=user_id,
+                        message_id=message_id,
+                        text=f"👉 Открытое место: {target_weak_spot}",
+                        reply_markup=markup)
+                      self.conn.execute("UPDATE users SET weak_spot = ? WHERE user_id = ?", (target_weak_spot, user_id))
+                      time.sleep(3)
+                 else:
                    player_hp -= 1
                    percent = round(player_hp / 6 * 100) if player_hp > 0 else 0
+                   self.handle_zombie(message) == False
                    bot.send_message(user_id, f"❌ Ай! У тебя осталось {percent}% HP.")
-                   if zombie_hp  or player_hp <= 0: 
-                      new_letter()
-                   if zombie_hp <= 0:
+                   if zombie_hp < 0 and player_hp < 0: 
+                      target_weak_spot = random.choice(weak_spots)
+                      if first_time:
+                       sent_message = bot.send_message(user_id, f"👉 Открытое место: {target_weak_spot}", reply_markup=markup)
+                       message_id = sent_message.message_id
+                       first_time = False
+                      else:
+                       bot.edit_message_text(
+                       chat_id=user_id,
+                       message_id=message_id,
+                       text=f"👉 Открытое место: {target_weak_spot}",
+                       reply_markup=markup)
+                      self.conn.execute("UPDATE users SET weak_spot = ? WHERE user_id = ?", (target_weak_spot, user_id))
+                      time.sleep(3)
+                 if zombie_hp == 0:
                     gold = zombie_hp_start // 2
                     bot.send_message(user_id, f"🏆 Победа! Ты получил {gold} кусочков золота.")
+                    sus = None
+                    self.conn.execute("UPDATE users SET weak_spot = ?, call_data = ? WHERE user_id = ?", (sus, sus, user_id))
                     extracted_gold += gold
                     killed_zombies += 1 
-                   elif player_hp <= 0:
-                    bot.send_message(user_id, "💀 Ты проиграл! Зомби прокусил твои доспехи.")
+                    break
+                 elif player_hp == 0:
+                    bot.send_message(user_id, "💀 Ты проиграл! Зомби прокусил твои доспехи, ты не получаешь заработанные награды.")
+                    sus = None
+                    self.conn.execute("UPDATE users SET weak_spot = ?, call_data = ? WHERE user_id = ?", (sus, sus, user_id))
                     time.sleep(2)
-                   if user[7] == 3:
-                    cur.execute(""" UPDATE users SET story = 4 WHERE user_id = ? """,(user_id,))
-                    bot.send_message(user_id, "*Бог: * К сожалению, ты не победил зомби. Но не переживай, это только начало...", parse_mode="Markdown")
-                  
-
-                
-                  
-                if player_hp > 0 and zombie_hp > 0:
-                    pass
-
-                if player_hp <= 0:
-                    break  
-
-                else:
-                   new_letter()
+                    if user[7] == 3:
+                     cur.execute(""" UPDATE users SET story = 4 WHERE user_id = ? """,(user_id,))
+                     bot.send_message(user_id, "*Бог: * К сожалению, ты не победил зомби. Но не переживай, это только начало...", parse_mode="Markdown")
+                    return
+                   
             elif event == "Wood":
                 wood_gained = random.randint(2, 7)
-                if user[3] == 3:
+                if user[7] == 3:
                    bot.send_message(user_id, f"Если ты находишь дерево, ты поличшь случайное количество дров.")
                 bot.send_message(user_id, f"Ты добыл {wood_gained} {'куска' if wood_gained < 5 else 'кусков'} дерева 🌲.")
                 extracted_wood += wood_gained
 
             elif event == "Stone":
                 stone_gained = random.randint(2, 5)
-                if user[3] == 3:
+                if user[7] == 3:
                    bot.send_message(user_id, f"Если ты находишь камень, то как и с деревом ты поличшь случайное количество кусков камня🪨.")
                 bot.send_message(user_id, f"Ты нашёл {stone_gained} {'кусочка ' if wood_gained < 5 else 'кусков '} камней 🪨.")
                 extracted_stone += stone_gained
@@ -353,5 +413,4 @@ class DB_Manager:
 
            bot.send_message(user_id, "*Бог: * Хорошее было сегодня приключение, воин!\nТы сражался достойно и вернулся с добычей. Я оставлю тебя на время, иди на охоту, строй дома и развивайся, потом увидишь как судьба с тобой поиграет...", parse_mode="Markdown")
         
-        
-   # Next step funktion!!!!!!!!
+    
