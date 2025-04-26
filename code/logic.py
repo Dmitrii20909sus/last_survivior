@@ -54,8 +54,8 @@ class DB_Manager:
           (1, 1, 2, 10, 8),
           (2, 2, 5, 20, 15),
           (3, 3, 10, 40, 30),
-          (4, 4, 20, 100, 80),
-          (5, 5, 40, 200, 180)]
+          (4, 4, 20, 60, 40),
+          (5, 5, 40, 90, 70)]
        with self.conn:
           cur = self.conn.cursor()
           cur.executemany("""INSERT OR IGNORE INTO house (id, level, gold_cost, wood_cost, stone_cost) VALUES (?, ?, ?, ?, ?)""", houses)
@@ -114,7 +114,7 @@ class DB_Manager:
           house = str("Нету дома")
        else:
           house = user[9]
-       bot.send_message(user_id, f"👤 Твой профиль: \n\n 🏆 Золото: {user[4]} \n 🪵 Дерево: {user[5]}\n 🪨 Камень: {user[6]} \n🍗 Еда: {user[3]}\n 🏠 Уровень дома: {house}")
+       bot.send_message(user_id, f"👤 Твой профиль: \n\n 🏅 Золото: {user[4]} \n 🪵 Дерево: {user[5]}\n 🪨 Камень: {user[6]} \n🍗 Еда: {user[3]}\n 🏠 Уровень дома: {house} \n 🧿 Артефакты: В разрабоке")
        if user[9] > 0:
           house_photo = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\lvl{house}.jpg"
           with open(house_photo, "rb") as f:
@@ -287,8 +287,8 @@ class DB_Manager:
                 bot.send_message(user_id, "На вас напал зомби🧟‍♂, защишайтесь!")
                 
                 if user[7] == 3:
-                    bot.send_message(user_id, "Каждый раз у зомби открытое место. Нажми на правильную кнопку. Если нажмёшь правильно — урон зомби, иначе — урон тебе.", parse_mode="Markdown")
-                    time.sleep(3)
+                    bot.send_message(user_id, "Каждый раз у зомби открытое место. Нажми на правильную кнопку. Если нажмёшь правильно — урон зомби, иначе — урон тебе. Каждый раз у тебя есть 3 секунды на раздумку", parse_mode="Markdown")
+                    time.sleep(6)
                     bot.send_message(user_id, "Итак, начнём:")
                 markup = types.InlineKeyboardMarkup()
                 buttons = [
@@ -373,15 +373,25 @@ class DB_Manager:
             elif event == "Wood":
                 wood_gained = random.randint(2, 7)
                 if user[7] == 3:
-                   bot.send_message(user_id, f"Если ты находишь дерево, ты поличшь случайное количество дров.")
-                bot.send_message(user_id, f"Ты добыл {wood_gained} {'куска' if wood_gained < 5 else 'кусков'} дерева 🌲.")
+                   if wood_gained < 5:
+                      kusok = 'дрова'
+                   else:
+                      kusok = 'дровей'
+                if user[7] == 3:
+                   bot.send_message(user_id, f"Если ты находишь дерево, ты получишь случайное количество дров.")
+                bot.send_message(user_id, f"Ты добыл {wood_gained} {kusok} дерева 🌲.")
                 extracted_wood += wood_gained
 
             elif event == "Stone":
                 stone_gained = random.randint(2, 5)
                 if user[7] == 3:
+                   if stone_gained < 5:
+                      kusok = 'кусочка'
+                   else:
+                      kusok = 'кусков'
+                      
                    bot.send_message(user_id, f"Если ты находишь камень, то как и с деревом ты поличшь случайное количество кусков камня🪨.")
-                bot.send_message(user_id, f"Ты нашёл {stone_gained} {'кусочка ' if wood_gained < 5 else 'кусков '} камней 🪨.")
+                bot.send_message(user_id, f"Ты нашёл {stone_gained} {kusok} камней 🪨.")
                 extracted_stone += stone_gained
 
             time.sleep(2)
@@ -414,3 +424,6 @@ class DB_Manager:
            bot.send_message(user_id, "*Бог: * Хорошее было сегодня приключение, воин!\nТы сражался достойно и вернулся с добычей. Я оставлю тебя на время, иди на охоту, строй дома и развивайся, потом увидишь как судьба с тобой поиграет...", parse_mode="Markdown")
         
     
+# If story < 4 (dann ändern)
+# House_shop statt haus bauen und autoren
+# Sujet weiter verarbeiten + ARTEFAKTEN als List
