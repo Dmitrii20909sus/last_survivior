@@ -202,45 +202,78 @@ class DB_Manager:
         time.sleep(2)
         self.conn.execute("UPDATE users SET story = 2 WHERE user_id = ?", (user_id,))
         bot.send_message(user_id, """*Бог:* Построй себе дом. Для этого тебе понадобятся 2🏅 10🪵 и 8🪨. Нажми на кнопку *Построить дом* в меню""", parse_mode="Markdown", reply_markup=markup)
-
+       
     def house(self, message):
-        user_id = message.chat.id
-        with self.conn:
-          cur = self.conn.cursor()
-          cur.execute('''SELECT u.gold, u.wood, u.stone, u.house_lvl,  u.story,
-                      h.gold_cost, h.wood_cost, h.stone_cost FROM users u
-                      INNER JOIN house h ON u.house_lvl + 1 = h.level
-                      WHERE u.user_id = ?
-                    ''', (user_id,))
-          data = cur.fetchone()       
-          if data:
-           gold, wood, stone, house_lvl, story, gold_cost, wood_cost, stone_cost = data
+     user_id = message.chat.id
+     user = self.select_user(message)
+     markupp = types.InlineKeyboardMarkup()
+     buttonp = types.InlineKeyboardButton("Купить дом", callback_data = "buyNewHouse")
+     markupp.add(buttonp)
+     with self.conn:
+        cur = self.conn.cursor()
+        cur.execute('''SELECT u.gold, u.wood, u.stone, u.house_lvl, u.story,
+                        h.gold_cost, h.wood_cost, h.stone_cost FROM users u
+                        INNER JOIN house h ON u.house_lvl + 1 = h.level
+                        WHERE u.user_id = ?''', (user_id,))
+        data = cur.fetchone()
 
-           if gold < gold_cost or wood < wood_cost or stone < stone_cost:
-            bot.send_message(user_id, "Недостаточно ресурсов для следующего уровня дома!")
-            return
+        if data:
+            gold, wood, stone, house_lvl, story, gold_cost, wood_cost, stone_cost = data
 
-           cur.execute("""
-           UPDATE users
-           SET gold = gold - ?, wood = wood - ?, stone = stone - ?, house_lvl = house_lvl + 1
-           WHERE user_id = ?
-           """, (gold_cost, wood_cost, stone_cost, user_id))
+            if gold < gold_cost or wood < wood_cost or stone < stone_cost:
+                bot.send_message(user_id, f"🏠 *Дома*\n\n Следующий уровень: *{house_lvl + 1}*\n 💰 Золото: {gold_cost} (у вас: {gold})\n Дерево: {wood_cost} (у вас: {wood})\n🪨 Камень: {stone_cost} (у вас: {stone})\n\n", parse_mode="Markdown")
+                bot.send_message(user_id, "Недостаточно ресурсов для следующего уровня дома!")
+                return
+            else:
+                bot.send_message(user_id, f"🏠 *Дома*\n\n Следующий уровень: *{house_lvl + 1}*\n 💰 Золото: {gold_cost} (у вас: {gold})\n Дерево: {wood_cost} (у вас: {wood})\n🪨 Камень: {stone_cost} (у вас: {stone})\n\n", parse_mode="Markdown", reply_markup=markupp)
+        else:
+            bot.send_message(user_id, "🏚️ Максимальный уровень дома достигнут.")
+            house_photo = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\5.jpg"
+            if os.path.exists(house_photo):
+                with open(house_photo, "rb") as f:
+                    bot.send_photo(user_id, f)
+    
+    def house_bought(self, call):
+      user_id = call.message.chat.id
+      with self.conn:
+       
+        cur = self.conn.cursor()
+        cur.execute('''SELECT u.gold, u.wood, u.stone, u.house_lvl, u.story,
+                        h.gold_cost, h.wood_cost, h.stone_cost FROM users u
+                        INNER JOIN house h ON u.house_lvl + 1 = h.level
+                        WHERE u.user_id = ?''', (user_id,))
+        data = cur.fetchone()
 
-           bot.send_message(user_id, f"🎉 Вы построили дом уровня {house_lvl + 1}!\nВаш баланс: 🏅 {gold - gold_cost}, 🪵 {wood - wood_cost}, 🪨 {stone - stone_cost}")
-           house_photo = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\lvl{house_lvl + 1}.jpg"
-           if os.path.exists(house_photo):
-               with open(house_photo, "rb") as f:
-                  bot.send_photo(user_id, f)
-                  if story == 2:
-                     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-                     markup.add("Профиль", "Охота", "Построить дом", "Путешествие")
-                     bot.send_message(user_id, "*Бог: *Ну чтож, сын мой божий, вот твой первый дом, скромноватый, но жить можно, потом лучше сделаешь. Теперь тебе нужно добыть ресурсов чтобы начать выживать. Теперь нажми на кнопку *Путешествие* чтобы начать, но учти, что ты не можешь отправлятся в путешествие на голодный желудок!", parse_mode="Markdown", reply_markup=markup)
-                     cur.execute("""UPDATE users
-                                    SET story = 3""")
-                 
-          else:
-           bot.send_message(user_id, "🏚️ Максимальный уровень дома достигнут.")
-           
+        if data:
+            gold, wood, stone, house_lvl, story, gold_cost, wood_cost, stone_cost = data
+            cur.execute("""
+                UPDATE users
+                SET gold = gold - ?, wood = wood - ?, stone = stone - ?, house_lvl = house_lvl + 1
+                WHERE user_id = ?
+            """, (gold_cost, wood_cost, stone_cost, user_id))
+            self.conn.commit()
+
+            bot.send_message(user_id, f"🎉 Вы построили дом уровня {house_lvl + 1}!\nВаш баланс: 🏅 {gold - gold_cost}, 🪵 {wood - wood_cost}, 🪨 {stone - stone_cost}")
+            print(house_lvl)
+            house_photo = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\lvl{house_lvl + 1}.jpg"
+            if os.path.exists(house_photo):
+                with open(house_photo, "rb") as f:
+                    bot.send_photo(user_id, f)
+
+            if story == 2:
+                markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+                markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие")
+                bot.send_message(user_id, "*Бог: *Ну чтож, сын мой божий, вот твой первый дом, скромноватый, но жить можно, потом лучше сделаешь. Теперь тебе нужно добыть ресурсов чтобы начать выживать. Теперь нажми на кнопку *Путешествие* чтобы начать, но учти, что ты не можешь отправлятся в путешествие на голодный желудок!", parse_mode="Markdown", reply_markup=markup)
+
+                cur.execute("""UPDATE users SET story = 3 WHERE user_id = ?""", (user_id,))
+                self.conn.commit()
+
+            if house_lvl + 1 == 2:
+                markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+                markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Продолжить сюжет")
+                cur.execute("UPDATE users SET story = 5 WHERE user_id = ?", (user_id,))
+                bot.send_message(user_id, "Вы можете продолжить сюжет (нажмите в меню)", reply_markup=markup)
+                      
     def handle_zombie(self, message):
        user = self.select_user(message)
        if user[10] == user[11]:
@@ -372,11 +405,10 @@ class DB_Manager:
                    
             elif event == "Wood":
                 wood_gained = random.randint(2, 7)
-                if user[7] == 3:
-                   if wood_gained < 5:
+                if wood_gained < 5:
                       kusok = 'дрова'
-                   else:
-                      kusok = 'дровей'
+                else:
+                      kusok = 'дров'
                 if user[7] == 3:
                    bot.send_message(user_id, f"Если ты находишь дерево, ты получишь случайное количество дров.")
                 bot.send_message(user_id, f"Ты добыл {wood_gained} {kusok} дерева 🌲.")
@@ -384,12 +416,11 @@ class DB_Manager:
 
             elif event == "Stone":
                 stone_gained = random.randint(2, 5)
-                if user[7] == 3:
-                   if stone_gained < 5:
+                if stone_gained < 5:
                       kusok = 'кусочка'
-                   else:
-                      kusok = 'кусков'
-                      
+                else:
+                      kusok = 'кускочков'
+                if user[7] == 3:     
                    bot.send_message(user_id, f"Если ты находишь камень, то как и с деревом ты поличшь случайное количество кусков камня🪨.")
                 bot.send_message(user_id, f"Ты нашёл {stone_gained} {kusok} камней 🪨.")
                 extracted_stone += stone_gained
@@ -420,9 +451,112 @@ class DB_Manager:
             SET story = 4
             WHERE user_id = ?
         """, (user_id,))
-
            bot.send_message(user_id, "*Бог: * Хорошее было сегодня приключение, воин!\nТы сражался достойно и вернулся с добычей. Я оставлю тебя на время, иди на охоту, строй дома и развивайся, потом увидишь как судьба с тобой поиграет...", parse_mode="Markdown")
+
+    def show_house_shop(self, message):
+     user_id = message.chat.id
+     user = self.select_user(message)
+    
+     with self.conn:
+        cur = self.conn.cursor()
         
+        # Получаем текущий уровень дома игрока
+        cur.execute("SELECT house_lvl FROM users WHERE user_id = ?", (user_id,))
+        current_lvl = cur.fetchone()[0]
+        
+        # Получаем информацию о следующем уровне дома
+        cur.execute("""
+            SELECT level, gold_cost, wood_cost, stone_cost 
+            FROM house 
+            WHERE level = ?
+        """, (current_lvl + 1,))
+        next_house = cur.fetchone()
+        
+        if not next_house:
+            bot.send_message(user_id, "🏆 Вы уже достигли максимального уровня дома!")
+            return
+        
+        level, gold_cost, wood_cost, stone_cost = next_house
+        
+        # Проверяем, хватает ли ресурсов
+        can_buy = (user[4] >= gold_cost and 
+                   user[5] >= wood_cost and 
+                   user[6] >= stone_cost)
+        
+        # Формируем сообщение
+        msg = f"🏠 *Магазин домов*\n\n"
+        msg += f"Следующий уровень: *{level}*\n"
+        msg += f"💰 Золото: {gold_cost} (у вас: {user[4]})\n"
+        msg += f"🪵 Дерево: {wood_cost} (у вас: {user[5]})\n"
+        msg += f"🪨 Камень: {stone_cost} (у вас: {user[6]})\n\n"
+        
+        if can_buy:
+            msg += "Вы можете приобрести этот дом!"
+        else:
+            msg += "Вам не хватает ресурсов для покупки."
+        
+        # Создаем клавиатуру
+        markup = types.InlineKeyboardMarkup()
+        if can_buy:
+            markup.add(types.InlineKeyboardButton(
+                "Купить дом", 
+                callback_data=f"buyNewHouse"
+            ))
+
+        
+        # Отправляем фото дома следующего уровня
+        house_image_path = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\lvl{level}.jpg"
+        if os.path.exists(house_image_path):
+            with open(house_image_path, 'rb') as photo:
+                bot.send_photo(
+                    user_id, 
+                    photo, 
+                    caption=msg, 
+                    parse_mode="Markdown", 
+                    reply_markup=markup
+                )
+        else:
+            bot.send_message(
+                user_id, 
+                msg, 
+                parse_mode="Markdown", 
+                reply_markup=markup
+            )
+
+    def resque_ivana(self, message):
+       user_id = message.chat.id
+       user = self.select_user(message)
+       if user[7] == 5:
+        return 1
+       if user[7] == 6:
+        with self.conn:
+         cur = self.conn.cursor()
+         cur.execute("UPDATE users SET food = food + 15 WHERE user_id = ?", (user_id,))
+        return 2
+       
+      
+    def story_lvl2(self, message):
+       user_id = message.chat.id
+       user = self.select_user(message)
+       with self.conn:
+          cur = self.conn.cursor()
+          cur.execute("UPDATE users SET story = 5 WHERE user_id = ?", (user_id,))
+          if user[7] == 5:
+           markup = types.InlineKeyboardMarkup()
+           resque = types.InlineKeyboardButton("Спасти странствующего", callback_data="resqueZolo")
+           markup.add(resque)
+           let_in = types.InlineKeyboardButton("Впустить професора", callback_data="LetInZolo")
+           bot.send_message(user_id, "*Странствущий:* ААААААА!!!! СПАСИТЕ!!!!!! ЗОМБИ!!!!!", reply_markup=markup, parse_mode="Markdown")
+           if self.resque_ivana(message) == 1:
+             markup.add(let_in)            
+             bot.send_message(user_id, "*Проф. Иван Золо: * Дорой человек, от всего серда благодарю тебя за спасение моей жизни! Меня зовут профессор иван золо, я учённый в области биологии и я очень хочу поставить точку над этим вирусом, но для этого мне ныжны определённые артифакты. Впусти меня в свой дом, у меня собой гостинцы есть.", parse_mode="Markdown", reply_markup=markup)
+           elif self.resque_ivana() == 2:
+             bot.send_message(user_id, "<i>Вам зачисленно: </i> +15🪨", parse_mode="HTML")
+             time.sleep(2)
+             bot.send_message(user_id, "*Проф. Иван Золо: * Вобщем, чтобы помочь мне, ты когда путешествовать будешь, передавай их мне, кстати списко артефактов ты можешь найти в мееню, каталоги артифакты.")
+             
+
+
     
 # If story < 4 (dann ändern)
 # House_shop statt haus bauen und autoren

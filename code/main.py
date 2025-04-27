@@ -33,9 +33,17 @@ def start_command(message):
             markup.add("Профиль", "Охота", "Построить дом", "Путешествие")
             bot.send_message(user_id, f"""Выберете действие:
             """, reply_markup=markup)
+        elif story == 4:
+            markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие")
+            bot.send_message(user_id, f"""Выберете действие:
+            """, reply_markup=markup)
+        elif story == 5: 
+           markup.add(("Профиль", "Охота", "Улучшить дом", "Путешествие", "Продолжить сюжет"))
+           bot.send_message(user_id, f"""Выберете действие:
+            """, reply_markup=markup)
 
 @bot.message_handler(func=lambda message: message.text == "Профиль")
-def handle_house(message):
+def handle_profile(message):
     manager.profile(message)
 
 
@@ -61,10 +69,10 @@ def handle_hunt(message):
         if story >= 1:
          manager.hunt(message)
         else: 
-         bot.send_message(user_id, f"""Сначала начните сюжет """, )
+         bot.send_message(user_id, f"""Сначала начните сюжет """)
          
 
-@bot.message_handler(func=lambda message: message.text == "Построить дом")
+@bot.message_handler(func=lambda message: message.text in ["Построить дом", "Улучшить дом"])
 def handle_house(message):
     user_id = message.chat.id
     user = manager.select_user(message)
@@ -83,9 +91,19 @@ def handle_adventure(message):
         story = user[7]
         if story >= 3:
          manager.adventure(message)
+@bot.message_handler(func=lambda message: message.text == "Продолжить сюжет")
+def handle_house(message):
+    user_id = message.chat.id
+    user = manager.select_user(message)
+
+    if user:
+        story = user[7]
+        if story == 5:
+         manager.story_lvl2(message)
+   
 
 @bot.callback_query_handler(func=lambda call: True)
-def handle_zombie_fight(call):
+def handle_call_back(call):
     with manager.conn:
      bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=None)   
      user_id = call.message.chat.id
@@ -95,16 +113,26 @@ def handle_zombie_fight(call):
      if call.data == "head":
       call_data = 'Голова'
       cur.execute("UPDATE users SET call_data = ? WHERE user_id = ?", (call_data, user_id))
+      manager.handle_zombie(message=call) 
      if call.data == "liver":
       call_data = 'Печень'
       cur.execute("UPDATE users SET call_data = ? WHERE user_id = ?", (call_data, user_id))
+      manager.handle_zombie(message=call) 
      if call.data == "chest":
       call_data = 'Грудь'
       cur.execute("UPDATE users SET call_data = ? WHERE user_id = ?", (call_data, user_id))
+      manager.handle_zombie(message=call) 
      if call.data == "leg":
       call_data = 'Нога'
-      cur.execute("UPDATE users SET call_data = ? WHERE user_id = ?", (call_data, user_id))        
-     manager.handle_zombie(message=call)  
+      cur.execute("UPDATE users SET call_data = ? WHERE user_id = ?", (call_data, user_id))
+      manager.handle_zombie(message=call)          
+     if call.data == "buyNewHouse":
+      manager.house_bought(call)
+     if call.data == "resqueZolo":
+        manager.resque_ivana(call.message)
+     if call.data == "ZoloLetIn":
+        manager.resque_ivana(call.message)
+
 
 if __name__ == "__main__":
     manager.create_tables()
