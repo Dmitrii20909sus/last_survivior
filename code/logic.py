@@ -477,7 +477,7 @@ class DB_Manager:
              time.sleep(2)
              markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
              markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты")
-             bot.send_message(user_id, "*Проф. Иван Золо: * Вобщем, чтобы помочь мне, ты когда путешествовать будешь, передавай их мне, кстати списко артефактов ты можешь найти в мееню, каталоги артифакты.", parse_mode="Markdown", reply_markup=markup)
+             bot.send_message(user_id, "*Проф. Иван Золо: * Вобщем, чтобы помочь мне, ты когда путешествовать будешь, передавай артифакты мне, кстати список артефактов ты можешь найти в меню, в каталоге артифакты.", parse_mode="Markdown", reply_markup=markup)
              with self.conn:
               cur = self.conn.cursor()
               cur.execute("UPDATE users SET story = 6 WHERE user_id = ?", (user_id,))             
