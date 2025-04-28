@@ -17,30 +17,30 @@ def start_command(message):
     if user:
         story = user[7]
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    
         if story == 0:
             markup.add("Профиль", "Начать сюжет")
-            bot.send_message(user_id, f"""Выберете действие:
-            """, reply_markup=markup)
+    
         elif story == 1:
             markup.add("Профиль", "Охота")
-            bot.send_message(user_id, f"""Выберете действие:
-            """, reply_markup=markup)
+           
         elif story == 2:
             markup.add("Профиль", "Охота")
-            bot.send_message(user_id, f"""Выберете действие:
-            """, reply_markup=markup)
+            
         elif story == 3:
             markup.add("Профиль", "Охота", "Построить дом", "Путешествие")
-            bot.send_message(user_id, f"""Выберете действие:
-            """, reply_markup=markup)
+           
         elif story == 4:
             markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие")
-            bot.send_message(user_id, f"""Выберете действие:
-            """, reply_markup=markup)
+           
         elif story == 5: 
            markup.add(("Профиль", "Охота", "Улучшить дом", "Путешествие", "Продолжить сюжет"))
-           bot.send_message(user_id, f"""Выберете действие:
-            """, reply_markup=markup)
+           
+        elif story == 6: 
+           markup.add(("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты"))
+
+        bot.send_message(user_id, f"""Выберете действие:
+            """, reply_markup=markup)   
 
 @bot.message_handler(func=lambda message: message.text == "Профиль")
 def handle_profile(message):
@@ -129,9 +129,9 @@ def handle_call_back(call):
      if call.data == "buyNewHouse":
       manager.house_bought(call)
      if call.data == "resqueZolo":
-        manager.resque_ivana(call.message)
-     if call.data == "ZoloLetIn":
-        manager.resque_ivana(call.message)
+        manager.story_ivan_resqued(call.message)
+     if call.data == "LetInZolo":
+        manager.story_ivan_let_in(call.message)
 
 
 if __name__ == "__main__":
