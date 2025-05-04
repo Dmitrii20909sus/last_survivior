@@ -36,8 +36,9 @@ def start_command(message):
         elif story == 5: 
            markup.add(("Профиль", "Охота", "Улучшить дом", "Путешествие", "Продолжить сюжет"))
            
-        elif story == 6: 
-           markup.add(("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты"))
+        elif story == 7: 
+           markup.add(("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты", "Продолжить сюжет"))
+        
 
         bot.send_message(user_id, f"""Выберете действие:
             """, reply_markup=markup)   
@@ -91,6 +92,7 @@ def handle_adventure(message):
         story = user[7]
         if story >= 3:
          manager.adventure(message)
+
 @bot.message_handler(func=lambda message: message.text == "Продолжить сюжет")
 def handle_house(message):
     user_id = message.chat.id
@@ -100,7 +102,19 @@ def handle_house(message):
         story = user[7]
         if story == 5:
          manager.story_lvl2(message)
+        if story == 7:
+         manager.story_lvl3(message)
    
+@bot.message_handler(func=lambda message: message.text == "Артефакты")
+def show_artifacts(message):
+    user_id = message.chat.id
+    artifacts = manager.get_user_artifacts(user_id)
+    
+    if not artifacts:
+        bot.send_message(user_id, "У вас пока нет артефактов. Добывайте их в приключениях!")
+    else:
+        msg = "📜 Ваши артефакты:\n\n" + "\n".join(f"• {art}" for art in artifacts)
+        bot.send_message(user_id, msg)
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle_call_back(call):
@@ -137,4 +151,5 @@ def handle_call_back(call):
 if __name__ == "__main__":
     manager.create_tables()
     manager.insert_houses()
+   # manager.insert_artifacts()
     bot.infinity_polling()

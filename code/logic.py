@@ -47,7 +47,14 @@ class DB_Manager:
                               gold_cost INTEGER,
                               wood_cost INTEGER,
                               stone_cost INTEGER)""")
-
+            self.conn.execute("""CREATE TABLE IF NOT EXISTS artifacts (
+                              id INTEGER PRIMARY KEY AUTOINCREMENT,
+                              name TEXT,
+                              house_level_required INTEGER)""")
+            self.conn.execute("""CREATE TABLE IF NOT EXISTS user_artifacts (
+                              user_id INTEGER,
+                              artifact_id INTEGER,
+                              FOREIGN KEY (artifact_id) REFERENCES artifacts(id))""")
             
     def insert_houses(self):
        houses = [
@@ -59,7 +66,26 @@ class DB_Manager:
        with self.conn:
           cur = self.conn.cursor()
           cur.executemany("""INSERT OR IGNORE INTO house (id, level, gold_cost, wood_cost, stone_cost) VALUES (?, ?, ?, ?, ?)""", houses)
-       
+    
+    def insert_artifacts(self):
+     artifacts = [
+        ("🦷🦈 Зуб тралалело тралала", 1),
+        ("🌲 Корень Бр бр батапим", 1),
+        ("🏏 Дубина Тунг тунг тунг сахура", 2),
+        ("🦦 Кокос Борбалони лулилоли", 2),
+        ("🐸 Шина Бонека амбалабу", 3),
+        ("🐱🦐 Усик Трипи тропи",3),
+        ("☕🔪 Катана Капучино асасино", 4),
+        ("🐦🔎 Перо Шпиониро голубино",4),
+        ("🐘🌵 Иголка Лирили ларила",5),
+        ("💣🐊 Бомба Бомбардино крокодило", 5)
+
+    ]
+     with self.conn:
+      cur = self.conn.cursor()
+      cur.executemany("INSERT OR IGNORE INTO artifacts (name, house_level_required) VALUES (?, ?)", artifacts)
+    
+
     def select_user(self, message):
         if hasattr(message, 'chat') and message.chat: 
          user_id = message.chat.id
@@ -119,6 +145,8 @@ class DB_Manager:
           house_photo = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\lvl{house}.jpg"
           with open(house_photo, "rb") as f:
              bot.send_photo(user_id, f)
+       if user is None:
+          bot.send_message(user_id, f"У тебя ещё нету профиля")
        
     def story_0(self, message):
        user_id = message.chat.id
@@ -138,7 +166,10 @@ class DB_Manager:
        bot.send_message(user_id, "<i>Вам зачисленно: </i> +20🏅, +20🪵, +20🪨", parse_mode="HTML")  
       
        bot.send_message(user_id, """*Бог:* Скоро ты построишь себе новый дом, но сначала, иди ка ты на охоту, ты очень голодный, тебе стоило бы поесть, поэтому нажми в меню на кнопку *Охота*, чтобы добыть еды""", parse_mode="Markdown", reply_markup=markup)
-       
+       god = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\god.jpg"
+       if os.path.exists(god):
+        with open(god, "rb") as f:
+         bot.send_photo(user_id, f)
     def hunt(self, message):
        user = self.select_user(message)
        user_id = message.chat.id
@@ -221,11 +252,11 @@ class DB_Manager:
             gold, wood, stone, house_lvl, story, gold_cost, wood_cost, stone_cost = data
 
             if gold < gold_cost or wood < wood_cost or stone < stone_cost:
-                bot.send_message(user_id, f"🏠 *Дома*\n\n Следующий уровень: *{house_lvl + 1}*\n 💰 Золото: {gold_cost} (у вас: {gold})\n Дерево: {wood_cost} (у вас: {wood})\n🪨 Камень: {stone_cost} (у вас: {stone})\n\n", parse_mode="Markdown")
+                bot.send_message(user_id, f"🏠 *Дом *\n\n Следующий уровень: *{house_lvl + 1}*\n 💰 Золото: {gold_cost} (у вас: {gold})\n Дерево: {wood_cost} (у вас: {wood})\n🪨 Камень: {stone_cost} (у вас: {stone})\n\n", parse_mode="Markdown")
                 bot.send_message(user_id, "Недостаточно ресурсов для следующего уровня дома!")
                 return
             else:
-                bot.send_message(user_id, f"🏠 *Дома*\n\n Следующий уровень: *{house_lvl + 1}*\n 💰 Золото: {gold_cost} (у вас: {gold})\n Дерево: {wood_cost} (у вас: {wood})\n🪨 Камень: {stone_cost} (у вас: {stone})\n\n", parse_mode="Markdown", reply_markup=markupp)
+                bot.send_message(user_id, f"🏠 *Дом*\n\n Следующий уровень: *{house_lvl + 1}*\n 💰 Золото: {gold_cost} (у вас: {gold})\n Дерево: {wood_cost} (у вас: {wood})\n🪨 Камень: {stone_cost} (у вас: {stone})\n\n", parse_mode="Markdown", reply_markup=markupp)
         else:
             bot.send_message(user_id, "🏚️ Максимальный уровень дома достигнут.")
             house_photo = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\5.jpg"
@@ -273,14 +304,59 @@ class DB_Manager:
                 markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Продолжить сюжет")
                 cur.execute("UPDATE users SET story = 5 WHERE user_id = ?", (user_id,))
                 bot.send_message(user_id, "Вы можете продолжить сюжет (нажмите в меню)", reply_markup=markup)
-                      
+
+            elif house_lvl + 1 == 3:
+                markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+                markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты", "Продолжить сюжет")
+                cur.execute("UPDATE users SET story = 7 WHERE user_id = ?", (user_id,))
+                bot.send_message(user_id, "Вы можете продолжить сюжет (нажмите в меню)", reply_markup=markup)        
     def handle_zombie(self, message):
        user = self.select_user(message)
        if user[10] == user[11]:
            return True
        else:
           return False
-       
+    def check_for_new_artifacts(self, user_id):
+     cur = self.conn.cursor()
+     cur.execute("SELECT house_lvl FROM users WHERE user_id = ?", (user_id,))
+     row = cur.fetchone()
+     if not row:
+        return
+     house_level = row[0]
+
+   
+     cur.execute("""
+        SELECT id, name FROM artifacts
+        WHERE house_level_required <= ?
+        AND id NOT IN (
+            SELECT artifact_id FROM user_artifacts WHERE user_id = ?
+        )
+    """, (house_level, user_id))
+    
+     available_artifacts = cur.fetchall()
+
+     if not available_artifacts:
+        return
+
+     if house_level == 2:
+        chance = 2
+     elif house_level == 3:
+        chance = 3
+     elif house_level == 4:
+        chance = 5
+     elif house_level == 5:
+        chance = 15
+     else: 
+        chance = 0
+     
+
+  
+     if chance > 0 and random.randint(1, chance) == 1:
+        artifact = random.choice(available_artifacts)
+        artifact_id, name = artifact
+        cur.execute("INSERT INTO user_artifacts (user_id, artifact_id) VALUES (?, ?)", (user_id, artifact_id))
+        self.conn.commit()
+        bot.send_message(user_id, f"🗿 Ты нашёл древний артефакт: *{name}*", parse_mode="Markdown")  
     def adventure(self, message):
      first_time = True
      with self.conn:
@@ -426,7 +502,7 @@ class DB_Manager:
                 extracted_stone += stone_gained
 
             time.sleep(2)
-
+        self.check_for_new_artifacts(user_id)
       
         cur.execute("""
             UPDATE users
@@ -485,6 +561,52 @@ class DB_Manager:
               if os.path.exists(Zolik):
                 with open(Zolik, "rb") as f:
                     bot.send_photo(user_id, f)
-             
-            
-# Sujet weiter verarbeiten + ARTEFAKTEN als List
+    def story_lvl3(self, message):      
+       user_id = message.chat.id
+       bot.send_message(user_id, "*Проф. Иван Золо: * Молодец что смог улучшить дом, благодаря тебе я продвинул свои иследования ещё дальше. Теперь данные артфакты: Волос негра и клавиатуру взломщика пентагона.", parse_mode="Markdown")
+       Zolik3 = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\zolik3lvl.jpg"
+       if os.path.exists(Zolik3):
+        with open(Zolik3, "rb") as f:
+          bot.send_photo(user_id, f)
+    def get_user_artifacts(self, user_id):
+     with self.conn:
+        cur = self.conn.cursor()
+
+     
+        cur.execute("""
+            SELECT a.name 
+            FROM artifacts a
+            JOIN user_artifacts ua ON a.id = ua.artifact_id
+            WHERE ua.user_id = ?
+        """, (user_id,))
+        owned = [row[0] for row in cur.fetchall()]
+
+        cur.execute("""
+            SELECT a.name 
+            FROM artifacts a
+            JOIN users u ON u.user_id = ?
+            WHERE a.house_level_required <= u.house_lvl
+            AND a.id NOT IN (
+                SELECT artifact_id 
+                FROM user_artifacts 
+                WHERE user_id = ?
+            )
+        """, (user_id, user_id))
+        available = [row[0] for row in cur.fetchall()]
+
+     
+        result = "📜 Ваши артефакты:\n"
+        if owned:
+            result += "• " + "\n• ".join(owned) 
+        else:
+            result += "• У тебя пока нет артефактов."
+
+        result += "\n\n🧿 Доступные артефакты для твоего уровня:\n"
+        if available:
+            result += "• " + "\n• ".join(available)  
+        else:
+            result += "• Нет новых артефактов для твоего уровня."
+
+        print("Owned:", owned)
+        print("Available:", available)
+        bot.send_message(user_id, result)
