@@ -410,54 +410,31 @@ class DB_Manager:
                 while zombie_hp > 0 and player_hp > 0:
                      
                  target_weak_spot = random.choice(weak_spots)
-                 if first_time:
-                        sent_message = bot.send_message(user_id, f"👉 Открытое место: {target_weak_spot}", reply_markup=markup)
-                        message_id = sent_message.message_id
-                        first_time = False
-                 else:
-                        bot.edit_message_text(
-                        chat_id=user_id,
-                        message_id=message_id,
-                        text=f"👉 Открытое место: {target_weak_spot}",
-                        reply_markup=markup) 
+                
+                 bot.send_message(user_id, f"👉 Открытое место: {target_weak_spot}", reply_markup=markup) 
                  self.conn.execute("UPDATE users SET weak_spot = ? WHERE user_id = ?", (target_weak_spot, user_id))
                  time.sleep(3)
                  if self.handle_zombie(message) == True:
                     zombie_hp -= 1
                     percent = round(zombie_hp / zombie_hp_start * 100) if zombie_hp > 0 else 0
-                    self.handle_zombie(message) == False 
+                
                     bot.send_message(user_id, f"✅ Бам! У зомби осталось {percent}% HP.")
                     if zombie_hp < 0 or player_hp < 0: 
                       target_weak_spot = random.choice(weak_spots)
-                      self.handle_zombie(message) == False
-                      if first_time:
-                        sent_message = bot.send_message(user_id, f"👉 Открытое место: {target_weak_spot}", reply_markup=markup)
-                        message_id = sent_message.message_id
-                        first_time = False
-                      else:
-                        bot.edit_message_text(
-                        chat_id=user_id,
-                        message_id=message_id,
-                        text=f"👉 Открытое место: {target_weak_spot}",
+                   
+                    
+                      bot.send_message(user_id, f"👉 Открытое место: {target_weak_spot}",
                         reply_markup=markup)
                       self.conn.execute("UPDATE users SET weak_spot = ? WHERE user_id = ?", (target_weak_spot, user_id))
                       time.sleep(3)
                  else:
                    player_hp -= 1
                    percent = round(player_hp / 6 * 100) if player_hp > 0 else 0
-                   self.handle_zombie(message) == False
+              
                    bot.send_message(user_id, f"❌ Ай! У тебя осталось {percent}% HP.")
                    if zombie_hp < 0 and player_hp < 0: 
                       target_weak_spot = random.choice(weak_spots)
-                      if first_time:
-                       sent_message = bot.send_message(user_id, f"👉 Открытое место: {target_weak_spot}", reply_markup=markup)
-                       message_id = sent_message.message_id
-                       first_time = False
-                      else:
-                       bot.edit_message_text(
-                       chat_id=user_id,
-                       message_id=message_id,
-                       text=f"👉 Открытое место: {target_weak_spot}",
+                      bot.send_message(user_id, f"👉 Открытое место: {target_weak_spot}",
                        reply_markup=markup)
                       self.conn.execute("UPDATE users SET weak_spot = ? WHERE user_id = ?", (target_weak_spot, user_id))
                       time.sleep(3)
@@ -610,3 +587,6 @@ class DB_Manager:
         print("Owned:", owned)
         print("Available:", available)
         bot.send_message(user_id, result)
+
+
+# ARTEFAKTEN !!!!!!!!
