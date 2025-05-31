@@ -140,7 +140,7 @@ class DB_Manager:
           house = str("Нету дома")
        else:
           house = user[9]
-       bot.send_message(user_id, f"👤 Твой профиль: \n\n 🏅 Золото: {user[4]} \n 🪵 Дерево: {user[5]}\n 🪨 Камень: {user[6]} \n🍗 Еда: {user[3]}\n 🏠 Уровень дома: {house} \n 🧿 Артефакты: В разрабоке")
+       bot.send_message(user_id, f"👤* Твой профиль: *\n\n 🏅 Золото: {user[4]} \n 🪵 Дерево: {user[5]}\n 🪨 Камень: {user[6]} \n🍗 Еда: {user[3]}\n 🏠 Уровень дома: {house} \n 🧿 Артефакты: В разрабоке", parse_mode="Markdown")
        if user[9] > 0:
           house_photo = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\lvl{house}.jpg"
           with open(house_photo, "rb") as f:
@@ -358,7 +358,6 @@ class DB_Manager:
         self.conn.commit()
         bot.send_message(user_id, f"🗿 Ты нашёл древний артефакт: *{name}*", parse_mode="Markdown")  
     def adventure(self, message):
-     first_time = True
      with self.conn:
         cur = self.conn.cursor()
         user_id = message.chat.id
@@ -440,7 +439,11 @@ class DB_Manager:
                       time.sleep(3)
                  if zombie_hp == 0:
                     gold = zombie_hp_start // 2
-                    bot.send_message(user_id, f"🏆 Победа! Ты получил {gold} кусочков золота.")
+                    if gold < 5:
+                      kusok = 'кусочка'
+                    else:
+                      kusok = 'кусочек'
+                    bot.send_message(user_id, f"🏆 Победа! Ты получил {gold} {kusok} золота.")
                     sus = None
                     self.conn.execute("UPDATE users SET weak_spot = ?, call_data = ? WHERE user_id = ?", (sus, sus, user_id))
                     extracted_gold += gold
@@ -523,7 +526,7 @@ class DB_Manager:
              user_id = message.chat.id
              let_in = types.InlineKeyboardButton("Впустить професора", callback_data="LetInZolo")
              markup.add(let_in)
-             bot.send_message(user_id, "*Проф. Иван Золо: * Дорой человек, от всего серда благодарю тебя за спасение моей жизни! Меня зовут профессор иван золо, я учённый в области биологии и я очень хочу поставить точку над этим вирусом, но для этого мне нужны определённые артифакты. Впусти меня в свой дом, у меня собой гостинцы есть.", parse_mode="Markdown", reply_markup=markup)
+             bot.send_message(user_id, "*Проф. Иван Золо: * Дорогой человек, от всего серда благодарю тебя за спасение моей жизни! Меня зовут профессор иван золо, я учённый в области биологии и я очень хочу поставить точку над этим вирусом, но для этого мне нужны определённые артифакты. Впусти меня в свой дом, у меня собой гостинцы есть.", parse_mode="Markdown", reply_markup=markup)
     def story_ivan_let_in(self, message):
              user_id = message.chat.id        
              bot.send_message(user_id, "<i>Вам зачисленно: </i> +15🍖", parse_mode="HTML")
@@ -540,11 +543,17 @@ class DB_Manager:
                     bot.send_photo(user_id, f)
     def story_lvl3(self, message):      
        user_id = message.chat.id
-       bot.send_message(user_id, "*Проф. Иван Золо: * Молодец что смог улучшить дом, благодаря тебе я продвинул свои иследования ещё дальше. Теперь данные артфакты: Волос негра и клавиатуру взломщика пентагона.", parse_mode="Markdown")
+       markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+       markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты")
+       bot.send_message(user_id, "*Проф. Иван Золо: * Молодец что смог улучшить дом, благодаря тебе я продвинул свои иследования ещё дальше. Теперь данные артфакты: Волос негра и клавиатуру взломщика пентагона.", parse_mode="Markdown", reply_markup=markup)
        Zolik3 = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\zolik3lvl.jpg"
        if os.path.exists(Zolik3):
         with open(Zolik3, "rb") as f:
           bot.send_photo(user_id, f)
+        
+       with self.conn:
+        cur = self.conn.cursor()
+        cur.execute("UPDATE users SET story = 8 WHERE user_id = ?", (user_id,))
     def get_user_artifacts(self, user_id):
      with self.conn:
         cur = self.conn.cursor()
@@ -572,21 +581,16 @@ class DB_Manager:
         available = [row[0] for row in cur.fetchall()]
 
      
-        result = "📜 Ваши артефакты:\n"
+        result = "📜 *Ваши артефакты:*\n"
         if owned:
-            result += "• " + "\n• ".join(owned) 
+            result += "\n•".join(owned) 
         else:
-            result += "• У тебя пока нет артефактов."
+            result += "У тебя пока нет артефактов."
 
-        result += "\n\n🧿 Доступные артефакты для твоего уровня:\n"
+        result += "\n\n🧿 *Доступные артефакты для твоего уровня:*\n"
         if available:
-            result += "• " + "\n• ".join(available)  
+            result += "\n".join(available)  
         else:
-            result += "• Нет новых артефактов для твоего уровня."
+            result += "Нет новых артефактов для твоего уровня."
 
-        print("Owned:", owned)
-        print("Available:", available)
-        bot.send_message(user_id, result)
-
-
-# ARTEFAKTEN !!!!!!!!
+        bot.send_message(user_id, result, parse_mode="Markdown")
