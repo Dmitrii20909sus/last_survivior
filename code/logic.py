@@ -134,13 +134,29 @@ class DB_Manager:
            elif user is not None:
               pass
     def profile(self, message):
-       user_id = message.chat.id
-       user = self.select_user(message)
-       if user[9] == 0:
+       with self.conn:
+        cur = self.conn.cursor()
+        user_id = message.chat.id
+        user = self.select_user(message)
+        if user[9] == 0:
           house = str("Нету дома")
-       else:
+          bot.send_message(user_id, f"👤* Твой профиль: *\n\n 🏅 Золото: {user[4]} \n 🪵 Дерево: {user[5]}\n 🪨 Камень: {user[6]} \n🍗 Еда: {user[3]}\n 🏠 Уровень дома: {house}", parse_mode="Markdown")
+        else:
           house = user[9]
-       bot.send_message(user_id, f"👤* Твой профиль: *\n\n 🏅 Золото: {user[4]} \n 🪵 Дерево: {user[5]}\n 🪨 Камень: {user[6]} \n🍗 Еда: {user[3]}\n 🏠 Уровень дома: {house} \n 🧿 Артефакты: В разрабоке", parse_mode="Markdown")
+          result = " "
+          cur.execute("""
+            SELECT a.name 
+            FROM artifacts a
+            JOIN user_artifacts ua ON a.id = ua.artifact_id
+            WHERE ua.user_id = ?
+        """, (user_id,))
+          owned = [row[0] for row in cur.fetchall()]
+          if owned:
+            result += "\n  ".join(owned) 
+          else:
+            result += " У тебя пока нет артефактов."
+         
+          bot.send_message(user_id, f"👤* Твой профиль: *\n\n 🏅 Золото: {user[4]} \n 🪵 Дерево: {user[5]}\n 🪨 Камень: {user[6]} \n🍗 Еда: {user[3]}\n 🏠 Уровень дома: {house} \n 🧿 Артефакты: \n {result}", parse_mode="Markdown")
        if user[9] > 0:
           house_photo = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\lvl{house}.jpg"
           with open(house_photo, "rb") as f:
@@ -309,6 +325,12 @@ class DB_Manager:
                 markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
                 markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты", "Продолжить сюжет")
                 cur.execute("UPDATE users SET story = 7 WHERE user_id = ?", (user_id,))
+                bot.send_message(user_id, "Вы можете продолжить сюжет (нажмите в меню)", reply_markup=markup)
+
+            elif house_lvl + 1 == 4:
+                markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+                markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты", "Продолжить сюжет")
+                cur.execute("UPDATE users SET story = 9 WHERE user_id = ?", (user_id,))
                 bot.send_message(user_id, "Вы можете продолжить сюжет (нажмите в меню)", reply_markup=markup)        
     def handle_zombie(self, message):
        user = self.select_user(message)
@@ -545,7 +567,7 @@ class DB_Manager:
        user_id = message.chat.id
        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
        markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты")
-       bot.send_message(user_id, "*Проф. Иван Золо: * Молодец что смог улучшить дом, благодаря тебе я продвинул свои иследования ещё дальше. Теперь данные артфакты: Волос негра и клавиатуру взломщика пентагона.", parse_mode="Markdown", reply_markup=markup)
+       bot.send_message(user_id, "*Проф. Иван Золо: * Молодец что смог улучшить дом, благодаря тебе я продвинул свои иследования ещё дальше. Теперь я разузнал, какие новые артефактам надо раздобыть. Их ты можешь посмотреть нажав на кнопку артефакты.", parse_mode="Markdown", reply_markup=markup)
        Zolik3 = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\zolik3lvl.jpg"
        if os.path.exists(Zolik3):
         with open(Zolik3, "rb") as f:
@@ -554,10 +576,44 @@ class DB_Manager:
        with self.conn:
         cur = self.conn.cursor()
         cur.execute("UPDATE users SET story = 8 WHERE user_id = ?", (user_id,))
+
+    def story_lvl4(self, message):        
+       user_id = message.chat.id
+       bot.send_message(user_id, "*Проф. Иван Золо: * Опять же поздравлю тебя с нашим новым тобой постройленным домом. Соответственно я расширил мои исследование я понял какие нам артефакты нам ещё нуж... Погоди, ты это слышишь?", parse_mode="Markdown")
+       time.sleep(2)
+       markup = types.InlineKeyboardMarkup()
+       open = types.InlineKeyboardButton("Открыть дверь", callback_data="dora")
+       markup.add(open)
+       bot.send_message(user_id, "ТУК ТУК ТУК", reply_markup=markup)
+
+    def story_dora(self, message):
+       user_id = message.chat.id
+       markup = types.InlineKeyboardMarkup()
+       let_in = types.InlineKeyboardButton("Впустить Марию Ивановну", callback_data="LetInDora")
+       markup.add(let_in)
+       bot.send_message(user_id, "*Мария Ивановна: *Здраствуйте, меня зовут Мария Ивановна, раньше я была учительницой математики, но из-за зомби апокалипсиса я потеряла всё что у меня есть включая мою семью. Впустите меня пожалуйста в дом.", parse_mode="Markdown")
+       matematichka = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\matematichka.jpg"
+       if os.path.exists(matematichka):
+        with open(matematichka, "rb") as f:
+          bot.send_photo(user_id, f, reply_markup=markup)
+
+    def Ivan_Dora_plan(self, message):
+       user_id = message.chat.id 
+       markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+       markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты", "Поселение")
+       bot.send_message(user_id, "*Проф. Иван Золо:* Здравствуйте, я очень рад за вас что вы выжили, вы нам как раз очень нужны.",parse_mode="Markdown")
+       time.sleep(3)
+       bot.send_message(user_id, """*Проф. Иван Золо к тебе:* Так, коллега у меня есть план: Нам нужно развить цивилизацию людей чтобы побороть этот вирус усилиями наших потомков. Поэтому ты должен каждый раз после охоты делиться с нами 30% едой,а мы в это время с дорой будет продцуровать новый людей. Они тем временем будут становиться всё умнее и будут оснащать тебя новыми гаджетами которые будут облегчать тебе охоту и путешествие, что поможет тебе добывать больше ресурсов. А за поселением ты можешь следить спомощью кнопки __Поселение__. Я надесь ты всё понял, а теперь иди на охоту, не терпится когда ты уже уйдёшь)""", parse_mode="Markdown", reply_markup=markup)
+       with self.conn:
+        cur = self.conn.cursor()
+        cur.execute("UPDATE users SET story = 10 WHERE user_id = ?", (user_id,))
+       dorazolo = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\ZoloDora.jpg"
+       if os.path.exists(dorazolo):
+        with open(dorazolo, "rb") as f:
+          bot.send_photo(user_id, f)
     def get_user_artifacts(self, user_id):
      with self.conn:
         cur = self.conn.cursor()
-
      
         cur.execute("""
             SELECT a.name 
@@ -594,3 +650,8 @@ class DB_Manager:
             result += "Нет новых артефактов для твоего уровня."
 
         bot.send_message(user_id, result, parse_mode="Markdown")
+
+    def population(self, message):
+       user_id = message.chat.id
+  
+#  bevölkerung

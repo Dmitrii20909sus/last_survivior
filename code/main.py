@@ -44,6 +44,13 @@ def start_command(message):
         
         elif story == 8: 
            markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты")
+        
+        elif story == 9: 
+           markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты", "Продолжить сюжет")
+        
+        elif story == 10: 
+           markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты", "Поселение")
+
     
         bot.send_message(user_id, f"Выберете действие:", reply_markup=markup)   
 
@@ -108,6 +115,9 @@ def handle_house(message):
          manager.story_lvl2(message)
         if story == 7:
          manager.story_lvl3(message)
+        if story == 9:
+         manager.story_lvl4(message)
+        
    
 @bot.message_handler(func=lambda message: message.text == "Артефакты")
 def show_artifacts(message):
@@ -139,13 +149,17 @@ def handle_call_back(call):
       call_data = 'Нога'
       cur.execute("UPDATE users SET call_data = ? WHERE user_id = ?", (call_data, user_id))
       manager.handle_zombie(message=call)          
+
      if call.data == "buyNewHouse":
       manager.house_bought(call)
      if call.data == "resqueZolo":
         manager.story_ivan_resqued(call.message)
      if call.data == "LetInZolo":
         manager.story_ivan_let_in(call.message)
-
+     if call.data == "dora":
+        manager.story_dora(call.message)
+     if call.data == "LetInDora":
+        manager.Ivan_Dora_plan(call.message)
 
 if __name__ == "__main__":
     manager.create_tables()
