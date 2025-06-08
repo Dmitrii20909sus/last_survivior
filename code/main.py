@@ -124,6 +124,10 @@ def show_artifacts(message):
     user_id = message.chat.id
     manager.get_user_artifacts(user_id)
 
+@bot.message_handler(func= lambda message: message.text == "Поселение")
+def _population(message):
+    user_id = message.chat.id
+    manager.population(user_id)
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle_call_back(call):

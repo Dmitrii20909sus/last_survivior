@@ -652,5 +652,5 @@ class DB_Manager:
 
     def population(self, message):
        user_id = message.chat.id
-  
+       bot.send_message(user_id, "Bababoy")
 #  bevölkerung
