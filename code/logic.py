@@ -34,7 +34,7 @@ class DB_Manager:
                              gold INTEGER DEFAULT 0,
                              wood INTEGER DEFAULT 0,
                              stone INTEGER DEFAULT 0,
-                             story INTEGER DEFAULT 0,
+                             story REAL DEFAULT 0,
                              last_hunt_time REAL DEFAULT 0,
                              house_lvl INTEGER DEFAULT 0,
                              weak_spot TEXT,
@@ -638,7 +638,7 @@ class DB_Manager:
      
         result = "📜 *Ваши артефакты:*\n"
         if owned:
-            result += "\n•".join(owned) 
+            result += "\n".join(owned) 
         else:
             result += "У тебя пока нет артефактов."
 

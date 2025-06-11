@@ -127,7 +127,7 @@ def show_artifacts(message):
 @bot.message_handler(func= lambda message: message.text == "Поселение")
 def _population(message):
     user_id = message.chat.id
-    manager.population(user_id)
+    manager.population(message)
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle_call_back(call):
@@ -168,5 +168,8 @@ def handle_call_back(call):
 if __name__ == "__main__":
     manager.create_tables()
     manager.insert_houses()
-   # manager.insert_artifacts()
+  #  manager.insert_artifacts()
     bot.infinity_polling()
+
+
+    # https://probable-disco-4jgj67q469493qp64.github.dev/
