@@ -172,4 +172,5 @@ if __name__ == "__main__":
     bot.infinity_polling()
 
 
-    # https://probable-disco-4jgj67q469493qp64.github.dev/
+   # https://probable-disco-4jgj67q469493qp64.github.dev/
+   # взламываем пентагон

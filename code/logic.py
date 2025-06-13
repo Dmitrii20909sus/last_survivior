@@ -38,7 +38,8 @@ class DB_Manager:
                              last_hunt_time REAL DEFAULT 0,
                              house_lvl INTEGER DEFAULT 0,
                              weak_spot TEXT,
-                             call_data TEXT
+                             call_data TEXT,
+                             food_for_children INTEGER DEFAULT 0
                              )
                              """)
             self.conn.execute("""CREATE TABLE IF NOT EXISTS house(
@@ -230,25 +231,38 @@ class DB_Manager:
        for animal, count in self.results.items():
             if count > 0:
                 msg += f"{animal}: {count} шт.\n"
+       if user[7] < 10:
+        msg += f"\n<i>Всего очков:</i> {total_points} 🏆"
 
-       msg += f"\n<i>Всего очков:</i> {total_points} 🏆"
+        bot.send_message(user_id, msg, parse_mode="HTML")
 
-       bot.send_message(user_id, msg, parse_mode="HTML")
-
-       markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-       markup.add("Профиль", "Охота", "Построить дом")
-       self.conn.execute("UPDATE users SET food = food + ?, last_hunt_time = ? WHERE user_id = ?", (total_points, now, user_id))
-       if user[7] == 1: 
-        time.sleep(2)
-        if total_points < 20:
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        markup.add("Профиль", "Охота", "Построить дом")
+        self.conn.execute("UPDATE users SET food = food + ?, last_hunt_time = ? WHERE user_id = ?", (total_points, now, user_id))
+        if user[7] == 1: 
+         time.sleep(2)
+         if total_points < 20:
            bot.send_message(user_id, """*Бог:* Мда... Не очень конечно сегодня охота вышла, но ничего, Ещё научишся. Теперь тебе стоит подумать о строительстве твоего дома.""", parse_mode="Markdown")
-        else:
+         else:
            bot.send_message(user_id, """*Бог:* Хорошая охота, сын мой. Ты показал, что способен выжить. Теперь тебе стоит подумать о строительстве твоего дома.""", parse_mode="Markdown")
-       
-        time.sleep(2)
-        self.conn.execute("UPDATE users SET story = 2 WHERE user_id = ?", (user_id,))
-        bot.send_message(user_id, """*Бог:* Построй себе дом. Для этого тебе понадобятся 2🏅 10🪵 и 8🪨. Нажми на кнопку *Построить дом* в меню""", parse_mode="Markdown", reply_markup=markup)
-       
+        elif user[7] == 10:
+        
+         time.sleep(2)
+         self.conn.execute("UPDATE users SET story = 2 WHERE user_id = ?", (user_id,))
+         bot.send_message(user_id, """*Бог:* Построй себе дом. Для этого тебе понадобятся 2🏅 10🪵 и 8🪨. Нажми на кнопку *Построить дом* в меню""", parse_mode="Markdown", reply_markup=markup)
+       elif user[7] >= 10:
+           child_food = total_points * 0,3
+           food_for_you = total_points * 0,7
+
+           child_food = int(round(total_points * 0.3))
+           food_for_you = total_points - child_food
+           msg += f"\n<i>Всего очков:</i> {total_points} 🏆"
+           msg += f"\n<i>Для тебя:</i> {food_for_you} 🏆"
+           msg += f"\n<i>Для детей:</i> {child_food} 🏆"
+           bot.send_message(user_id, msg, parse_mode="HTML")
+         
+           self.conn.execute("UPDATE users SET food = food + ?, food_for_children = food_for_children + ?, last_hunt_time = ? WHERE user_id = ?", (food_for_you, child_food, now, user_id))
+
     def house(self, message):
      user_id = message.chat.id
      user = self.select_user(message)
@@ -566,7 +580,7 @@ class DB_Manager:
        user_id = message.chat.id
        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
        markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты")
-       bot.send_message(user_id, "*Проф. Иван Золо: * Молодец что смог улучшить дом, благодаря тебе я продвинул свои иследования ещё дальше. Теперь я разузнал, какие новые артефактам надо раздобыть. Их ты можешь посмотреть нажав на кнопку артефакты.", parse_mode="Markdown", reply_markup=markup)
+       bot.send_message(user_id, "*Проф. Иван Золо: * Молодец что смог улучшить дом, благодаря тебе я продвинул свои иследования ещё дальше. Теперь я разузнал, какие новые артефакты надо раздобыть. Их ты можешь посмотреть нажав на кнопку артефакты.", parse_mode="Markdown", reply_markup=markup)
        Zolik3 = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\zolik3lvl.jpg"
        if os.path.exists(Zolik3):
         with open(Zolik3, "rb") as f:
@@ -590,11 +604,11 @@ class DB_Manager:
        markup = types.InlineKeyboardMarkup()
        let_in = types.InlineKeyboardButton("Впустить Марию Ивановну", callback_data="LetInDora")
        markup.add(let_in)
-       bot.send_message(user_id, "*Мария Ивановна: *Здраствуйте, меня зовут Мария Ивановна, раньше я была учительницой математики, но из-за зомби апокалипсиса я потеряла всё что у меня есть включая мою семью. Впустите меня пожалуйста в дом.", parse_mode="Markdown")
+       bot.send_message(user_id, "*Мария Ивановна: *Здраствуйте, меня зовут Мария Ивановна, раньше я была учительницой математики, но из-за зомби апокалипсиса я потеряла всё что у меня есть включая мою семью. Впустите меня пожалуйста в дом.", parse_mode="Markdown", reply_markup=markup)
        matematichka = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\matematichka.jpg"
        if os.path.exists(matematichka):
         with open(matematichka, "rb") as f:
-          bot.send_photo(user_id, f, reply_markup=markup)
+          bot.send_photo(user_id, f)
 
     def Ivan_Dora_plan(self, message):
        user_id = message.chat.id 
@@ -653,4 +667,3 @@ class DB_Manager:
     def population(self, message):
        user_id = message.chat.id
        bot.send_message(user_id, "Bababoy")
-#  bevölkerung
