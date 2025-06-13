@@ -39,7 +39,8 @@ class DB_Manager:
                              house_lvl INTEGER DEFAULT 0,
                              weak_spot TEXT,
                              call_data TEXT,
-                             food_for_children INTEGER DEFAULT 0
+                             food_for_children INTEGER DEFAULT 0, 
+                             people INTEGER DEFAULT 0
                              )
                              """)
             self.conn.execute("""CREATE TABLE IF NOT EXISTS house(
@@ -140,8 +141,8 @@ class DB_Manager:
         user = self.select_user(message)
         if user[9] == 0:
           house = str("Нету дома")
-          bot.send_message(user_id, f"👤* Твой профиль: *\n\n 🏅 Золото: {user[4]} \n 🪵 Дерево: {user[5]}\n 🪨 Камень: {user[6]} \n🍗 Еда: {user[3]}\n 🏠 Уровень дома: {house}", parse_mode="Markdown")
-        else:
+          bot.send_message(user_id, f"👤* Твой профиль: *\n\n 🏅 Золото: {user[4]} \n 🪵 Дерево: {user[5]}\n 🪨 Камень: {user[6]} \n🍗 Еда: {user[3]}\n 🏠 Уровень дома: {house}\n 👦Население: {user[13]}\n 🍗👦 Еда для послеления{user[12]}", parse_mode="Markdown")
+        elif 0 < user[7] < 10: 
           house = user[9]
           result = " "
           cur.execute("""
@@ -157,6 +158,21 @@ class DB_Manager:
             result += " У тебя пока нет артефактов."
          
           bot.send_message(user_id, f"👤* Твой профиль: *\n\n 🏅 Золото: {user[4]} \n 🪵 Дерево: {user[5]}\n 🪨 Камень: {user[6]} \n🍗 Еда: {user[3]}\n 🏠 Уровень дома: {house} \n 🧿 Артефакты: \n {result}", parse_mode="Markdown")
+        else: 
+          house = user[9]
+          result = " "
+          cur.execute("""
+            SELECT a.name 
+            FROM artifacts a
+            JOIN user_artifacts ua ON a.id = ua.artifact_id
+            WHERE ua.user_id = ?
+        """, (user_id,))
+          owned = [row[0] for row in cur.fetchall()]
+          if owned:
+            result += "\n  ".join(owned) 
+          else:
+            result += " У тебя пока нет артефактов."    
+          bot.send_message(user_id, f"👤* Твой профиль: *\n\n 🏅 Золото: {user[4]} \n 🪵 Дерево: {user[5]}\n 🪨 Камень: {user[6]} \n🍗 Еда: {user[3]}\n 🏠 Уровень дома: {house} 👦Население: {user[13]}\n 🍗👦 Еда для послеления{user[12]} \n 🧿 Артефакты: \n {result}", parse_mode="Markdown")
        if user[9] > 0:
           house_photo = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\lvl{house}.jpg"
           with open(house_photo, "rb") as f:
