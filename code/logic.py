@@ -141,7 +141,7 @@ class DB_Manager:
         user = self.select_user(message)
         if user[9] == 0:
           house = str("Нету дома")
-          bot.send_message(user_id, f"👤* Твой профиль: *\n\n 🏅 Золото: {user[4]} \n 🪵 Дерево: {user[5]}\n 🪨 Камень: {user[6]} \n🍗 Еда: {user[3]}\n 🏠 Уровень дома: {house}\n 👦Население: {user[13]}\n 🍗👦 Еда для послеления{user[12]}", parse_mode="Markdown")
+          bot.send_message(user_id, f"👤* Твой профиль: *\n\n 🏅 Золото: {user[4]} \n 🪵 Дерево: {user[5]}\n 🪨 Камень: {user[6]} \n🍗 Еда: {user[3]}\n 🏠 Уровень дома: {house}\n 👦Население: {user[13]}\n 🍗👦 Еда для послеления{user[12]} \n ", parse_mode="Markdown")
         elif 0 < user[7] < 10: 
           house = user[9]
           result = " "
@@ -172,7 +172,7 @@ class DB_Manager:
             result += "\n  ".join(owned) 
           else:
             result += " У тебя пока нет артефактов."    
-          bot.send_message(user_id, f"👤* Твой профиль: *\n\n 🏅 Золото: {user[4]} \n 🪵 Дерево: {user[5]}\n 🪨 Камень: {user[6]} \n🍗 Еда: {user[3]}\n 🏠 Уровень дома: {house} 👦Население: {user[13]}\n 🍗👦 Еда для послеления{user[12]} \n 🧿 Артефакты: \n {result}", parse_mode="Markdown")
+          bot.send_message(user_id, f"👤* Твой профиль: *\n\n 🏅 Золото: {user[4]} \n 🪵 Дерево: {user[5]}\n 🪨 Камень: {user[6]} \n🍗 Еда: {user[3]}\n 🏠 Уровень дома: {house}  \n 👦Население: {user[13]}\n 🍗👦 Еда для послеления{user[12]} \n 🧿 Артефакты: \n {result}", parse_mode="Markdown")
        if user[9] > 0:
           house_photo = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\lvl{house}.jpg"
           with open(house_photo, "rb") as f:
