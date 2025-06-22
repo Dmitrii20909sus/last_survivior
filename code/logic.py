@@ -38,7 +38,8 @@ class DB_Manager:
                              last_hunt_time REAL DEFAULT 0,
                              house_lvl INTEGER DEFAULT 0,
                              weak_spot TEXT,
-                             call_data TEXT
+                             call_data TEXT,
+                             food_for_kids INTEGER DEFAULT 0
                              )
                              """)
             self.conn.execute("""CREATE TABLE IF NOT EXISTS house(
@@ -223,6 +224,15 @@ class DB_Manager:
             caught = random.choice(choices)
             self.results[caught] += 1
             total_points += self.animals[caught]
+            food_for_you_raw = total_points * 0.7
+            food_for_kids_raw = total_points * 0.3
+
+            if food_for_you_raw.is_integer():
+             food_for_you = int(food_for_you_raw)
+             food_for_kids = int(food_for_kids_raw)
+            else:
+             food_for_you = int(food_for_you_raw)
+             food_for_kids = total_points - food_for_you
             bot.send_message(user_id, f"✅ Попытка {i+1}: Пойман {caught} (+{self.animals[caught]} очков)")
 
        
@@ -230,14 +240,19 @@ class DB_Manager:
        for animal, count in self.results.items():
             if count > 0:
                 msg += f"{animal}: {count} шт.\n"
+       
+       msg += f"\n<i>Всего очков:</i> {total_points} 🏆 "
 
-       msg += f"\n<i>Всего очков:</i> {total_points} 🏆"
+       msg += f"\n<i>Твоя еда:</i> {food_for_you} 🏆"
+        
+       msg += f"\n<i>Еда для детей:</i> {food_for_kids} 🏆"
 
        bot.send_message(user_id, msg, parse_mode="HTML")
 
        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
        markup.add("Профиль", "Охота", "Построить дом")
-       self.conn.execute("UPDATE users SET food = food + ?, last_hunt_time = ? WHERE user_id = ?", (total_points, now, user_id))
+       self.conn.execute("UPDATE users SET food = food + ?, food_for_kids = food_for_kids + ?, last_hunt_time = ? WHERE user_id = ?", (food_for_you, food_for_kids, now, user_id))
+
        if user[7] == 1: 
         time.sleep(2)
         if total_points < 20:
@@ -652,5 +667,7 @@ class DB_Manager:
 
     def population(self, message):
        user_id = message.chat.id
-  
+       with self.conn:
+          cur = self.conn.cursor()
+
 #  bevölkerung
