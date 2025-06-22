@@ -117,6 +117,7 @@ class DB_Manager:
               story = 0
               house_lvl = 0
               cur.execute('''INSERT INTO users (user_id, username, food, gold, wood, stone, story, house_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', (user_id, username, food, gold, wood, stone, story, house_lvl))
+              bot.send_message(user_id, "Данный проект был создан Дмитрием Горским и Родионом Кундянок")
               video_path = "C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\vstuplenie.mp4"
               bot.send_message(user_id, "Вступление загружается, подождите немного.")
               bot.send_chat_action(user_id, "upload_video")
