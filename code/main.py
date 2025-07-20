@@ -164,5 +164,6 @@ def handle_call_back(call):
 if __name__ == "__main__":
     manager.create_tables()
     manager.insert_houses()
-   # manager.insert_artifacts()
+    manager.insert_population_boosts()
+    manager.insert_artifacts()
     bot.infinity_polling()

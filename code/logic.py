@@ -25,8 +25,8 @@ class DB_Manager:
         self.results = {animal: 0 for animal in self.animals}
 
     def create_tables(self):
-        with self.conn:
-            self.conn.execute("""CREATE TABLE IF NOT EXISTS users(
+     with self.conn:
+        self.conn.execute("""CREATE TABLE IF NOT EXISTS users(
                              id INTEGER PRIMARY KEY,
                              username TEXT,
                              user_id TEXT UNIQUE,
@@ -40,23 +40,41 @@ class DB_Manager:
                              weak_spot TEXT,
                              call_data TEXT,
                              food_for_kids INTEGER DEFAULT 0
-                             )
-                             """)
-            self.conn.execute("""CREATE TABLE IF NOT EXISTS house(
+                             )""")
+        self.conn.execute("""CREATE TABLE IF NOT EXISTS house(
                               id INTEGER PRIMARY KEY,
                               level INTEGER,
                               gold_cost INTEGER,
                               wood_cost INTEGER,
                               stone_cost INTEGER)""")
-            self.conn.execute("""CREATE TABLE IF NOT EXISTS artifacts (
+        self.conn.execute("""CREATE TABLE IF NOT EXISTS artifacts (
                               id INTEGER PRIMARY KEY AUTOINCREMENT,
-                              name TEXT,
-                              house_level_required INTEGER)""")
-            self.conn.execute("""CREATE TABLE IF NOT EXISTS user_artifacts (
+                              name TEXT UNIQUE,
+                              house_level_required INTEGER)""") 
+        self.conn.execute("""CREATE TABLE IF NOT EXISTS user_artifacts (
                               user_id INTEGER,
                               artifact_id INTEGER,
                               FOREIGN KEY (artifact_id) REFERENCES artifacts(id))""")
-            
+        self.conn.execute("""CREATE TABLE IF NOT EXISTS population_boosts (
+                              boost TEXT UNIQUE,  -- <- Auch UNIQUE
+                              lvl1boost REAL,
+                              lvl2boost REAL,
+                              lvl3boost REAL,
+                              lvl4boost REAL,
+                              lvl1cost REAL,
+                              lvl2cost REAL,
+                              lvl3cost REAL,
+                              lvl4cost REAL
+                               )""")
+        self.conn.execute("""CREATE TABLE IF NOT EXISTS user_population(
+                              user_id INTEGER PRIMARY KEY,
+                              people INTEGER DEFAULT 0,
+                              lvlhunt INTEGER DEFAULT 0,
+                              lvlstone INTEGER DEFAULT 0,
+                              lvlfood INTEGER DEFAULT 0,
+                              lvlgold INTEGER DEFAULT 0,
+                              FOREIGN KEY (user_id) REFERENCES users(user_id)
+                             )""")
     def insert_houses(self):
        houses = [
           (1, 1, 2, 10, 8),
@@ -67,7 +85,17 @@ class DB_Manager:
        with self.conn:
           cur = self.conn.cursor()
           cur.executemany("""INSERT OR IGNORE INTO house (id, level, gold_cost, wood_cost, stone_cost) VALUES (?, ?, ?, ?, ?)""", houses)
-    
+   
+    def insert_population_boosts(self):
+       pop_boosts = [("Оружие для охоты", 1.5, 2, 3, 4, 15, 30, 50, 80),
+                     ("Кирка", 1.8, 2.5, 3.5, 5, 20, 30, 60, 100),
+                     ("Топор", 1.8, 2.5, 3.5, 5, 20, 30, 60, 100),
+                     ("Оружие для защиты от зомби", 2, 3, 4, 5, 20, 40, 70, 100)]
+       with self.conn:
+          cur = self.conn.cursor()
+          cur.executemany("""INSERT OR IGNORE INTO population_boosts (boost, lvl1boost, lvl2boost,
+                           lvl3boost, lvl4boost, lvl1cost, lvl2cost, lvl3cost, lvl4cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", pop_boosts)
+
     def insert_artifacts(self):
      artifacts = [
         ("🦷🦈 Зуб тралалело тралала", 1),
@@ -80,13 +108,13 @@ class DB_Manager:
         ("🐦🔎 Перо Шпиониро голубино",4),
         ("🐘🌵 Иголка Лирили ларила",5),
         ("💣🐊 Бомба Бомбардино крокодило", 5)
-
     ]
+     
      with self.conn:
       cur = self.conn.cursor()
       cur.executemany("INSERT OR IGNORE INTO artifacts (name, house_level_required) VALUES (?, ?)", artifacts)
     
-
+    
     def select_user(self, message):
         if hasattr(message, 'chat') and message.chat: 
          user_id = message.chat.id
@@ -97,7 +125,7 @@ class DB_Manager:
 
         with self.conn:
          cur = self.conn.cursor()
-         cur.execute("SELECT * FROM USERS WHERE user_id = ?", (user_id,))
+         cur.execute("SELECT * FROM users WHERE user_id = ?", (user_id,))
          user = cur.fetchone()
         return user
 
@@ -670,5 +698,3 @@ class DB_Manager:
        user_id = message.chat.id
        with self.conn:
           cur = self.conn.cursor()
-
-#  bevölkerung
