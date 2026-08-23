@@ -13,7 +13,8 @@ def start_command(message):
     manager.start(message)
 
     user = manager.select_user(message)
-
+    if user[13]:  
+        return
     if user:
         story = user[7]
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -43,13 +44,16 @@ def start_command(message):
            markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты", "Продолжить сюжет")
         
         elif story == 8: 
-           markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты")
+           markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты", "Поселение")
         
         elif story == 9: 
-           markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты", "Продолжить сюжет")
+           markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты", "Поселение", "Продолжить сюжет")
         
         elif story == 10: 
            markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты", "Поселение")
+
+        elif story == 11: 
+           markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты", "Поселение", "Продолжить сюжет")
 
     
         bot.send_message(user_id, f"Выберете действие:", reply_markup=markup)   
@@ -67,7 +71,7 @@ def work_keyboard(message):
     if user:
         story = user[7]
         if story != 0:
-            bot.send_message(user_id, f"""Вы уже прошли начало сюжета  """)
+            bot.send_message(user_id, f"""Вы уже прошли начало сюжета""")
         elif story == 0:
           manager.story_0(message)
 
@@ -117,6 +121,8 @@ def handle_house(message):
          manager.story_lvl3(message)
         if story == 9:
          manager.story_lvl4(message)
+        if story == 11:
+         manager.story_lvl5(message)
         
    
 @bot.message_handler(func=lambda message: message.text == "Артефакты")
@@ -124,46 +130,113 @@ def show_artifacts(message):
     user_id = message.chat.id
     manager.get_user_artifacts(user_id)
 
+@bot.message_handler(func=lambda message: message.text == "Поселение")
+def _population(message):
+   manager.population(message)
+
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle_call_back(call):
-    with manager.conn:
-     bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=None)   
+     call_data = call.data 
      user_id = call.message.chat.id
-     cur = manager.conn.cursor()
-     cur.execute("SELECT * FROM users WHERE user_id = ?", (user_id,))
-     user = cur.fetchone()
-     if call.data == "head":
-      call_data = 'Голова'
-      cur.execute("UPDATE users SET call_data = ? WHERE user_id = ?", (call_data, user_id))
-      manager.handle_zombie(message=call) 
-     if call.data == "liver":
-      call_data = 'Печень'
-      cur.execute("UPDATE users SET call_data = ? WHERE user_id = ?", (call_data, user_id))
-      manager.handle_zombie(message=call) 
-     if call.data == "chest":
-      call_data = 'Грудь'
-      cur.execute("UPDATE users SET call_data = ? WHERE user_id = ?", (call_data, user_id))
-      manager.handle_zombie(message=call) 
-     if call.data == "leg":
-      call_data = 'Нога'
-      cur.execute("UPDATE users SET call_data = ? WHERE user_id = ?", (call_data, user_id))
-      manager.handle_zombie(message=call)          
+     try:
+         bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=None) 
+     except Exception:
+         pass
 
      if call.data == "buyNewHouse":
-      manager.house_bought(call)
+         manager.house_bought(call)
+         return
      if call.data == "resqueZolo":
-        manager.story_ivan_resqued(call.message)
+         manager.story_ivan_resqued(call.message)
+         return
      if call.data == "LetInZolo":
-        manager.story_ivan_let_in(call.message)
+         manager.story_ivan_let_in(call.message)
+         return
      if call.data == "dora":
-        manager.story_dora(call.message)
+         manager.story_dora(call.message)
+         return
      if call.data == "LetInDora":
-        manager.Ivan_Dora_plan(call.message)
+         manager.Ivan_Dora_plan(call.message)
+         return
+     if call.data == "HuntWithZolo":
+         manager.hunt_with_zolik(call.message)
+         return
+     if call.data == "take_weapon":
+         manager.zolo_is_dead(call.message)
+         return
+     if call.data == "stop_dora":
+         manager.stop_dora(call.message)
+         return
+     if call.data == "listen_dora":
+         manager.dora_in_prison(call.message)
+         return
+
+     if call.data.startswith("send_sticker_profile_"):  
+            entire = call.data.split("_")
+            call_stick = entire[-1]
+            method_name = f"return_sticker_{call_stick}"
+            method = getattr(manager, method_name, None)
+
+            if method: 
+                method(call) 
+            return
+     
+     if call_data == "WithoutBadWords":
+        manager.understand(call)
+        return
+     if call_data == "WithBadWords":
+        manager.understand2(call)
+        return
+
+     if call.data == "incest":
+        manager.incest(call.message)
+        return
+     if call.data == "boost_lvl":
+        manager.shop(call.message)
+        return
+     if call.data.startswith("buy_"):
+        manager.buy_item(call)
+        return
+     with manager.conn:     
+      cur = manager.conn.cursor()
+      cur.execute("SELECT * FROM users WHERE user_id = ?", (user_id,))
+      user = cur.fetchone()
+      if call.data == "understand":
+         manager.understand(call)
+      if call.data == "head":
+         if user[13] == 0:
+          return
+         call_data = 'Голова'
+         cur.execute("UPDATE users SET call_data = ? WHERE user_id = ?", (call_data, user_id))
+         manager.handle_zombie(message=call) 
+      if call.data == "liver":
+         if user[13] == 0:
+          return
+         call_data = 'Печень'
+         cur.execute("UPDATE users SET call_data = ? WHERE user_id = ?", (call_data, user_id))
+         manager.handle_zombie(message=call) 
+      if call.data == "chest":
+         if user[13] == 0:
+          return
+         call_data = 'Грудь'
+         cur.execute("UPDATE users SET call_data = ? WHERE user_id = ?", (call_data, user_id))
+         manager.handle_zombie(message=call) 
+      if call.data == "leg":
+         if user[13] == 0:
+          return
+         call_data = 'Нога'
+         cur.execute("UPDATE users SET call_data = ? WHERE user_id = ?", (call_data, user_id))
+         manager.handle_zombie(message=call)          
+     
+     
+    
 
 if __name__ == "__main__":
     manager.create_tables()
     manager.insert_houses()
     manager.insert_population_boosts()
     manager.insert_artifacts()
+    bot.remove_webhook()
     bot.infinity_polling()
+
