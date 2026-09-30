@@ -54,7 +54,8 @@ def start_command(message):
 
         elif story == 11: 
            markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты", "Поселение", "Продолжить сюжет")
-
+        elif story == 12:
+           markup.add("Профиль", "Охота", "Путешествие", "Артефакты", "Смешать артефакты")
     
         bot.send_message(user_id, f"Выберете действие:", reply_markup=markup)   
 
@@ -102,7 +103,7 @@ def handle_house(message):
 def handle_adventure(message):
     user_id = message.chat.id
     user = manager.select_user(message)
-
+    
     if user:
         story = user[7]
         if story >= 3:
@@ -134,11 +135,26 @@ def show_artifacts(message):
 def _population(message):
    manager.population(message)
 
+@bot.message_handler(func =lambda message: message.text == "Смешать артефакты")
+def _end(message):
+   manager.end(message)
+
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle_call_back(call):
      call_data = call.data 
      user_id = call.message.chat.id
+
+     if call.data.startswith("send_sticker_profile_"):  
+                 entire = call.data.split("_")
+                 call_stick = entire[-1]
+                 method_name = f"return_sticker_{call_stick}"
+                 method = getattr(manager, method_name, None)
+     
+                 if method: 
+                     method(call) 
+                 return
+     
      try:
          bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id, reply_markup=None) 
      except Exception:
@@ -171,6 +187,17 @@ def handle_call_back(call):
      if call.data == "listen_dora":
          manager.dora_in_prison(call.message)
          return
+     if call.data == "resque_zolo":
+        manager.zolo_resqued(call.message)
+        return
+     if call.data == "listen_zolo":
+        manager.listen_zolo(call.message)
+        return
+     if call.data == "go_with_zolo":
+        manager.go_with_zolo(call.message)
+        return
+
+     
 
      if call.data.startswith("send_sticker_profile_"):  
             entire = call.data.split("_")

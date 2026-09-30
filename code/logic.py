@@ -221,7 +221,7 @@ class DB_Manager:
               story = 0
               house_lvl = 0
               cur.execute('''INSERT INTO users (user_id, username, food, gold, wood, stone, story, house_lvl) VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', (user_id, username, food, gold, wood, stone, story, house_lvl))
-              video_path = "C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\vstuplenie.mp4"
+              video_path = os.path.join("images", "vstuplenie.mp4")
               bot.send_message(user_id, "Вступление загружается, подождите немного.")
               bot.send_chat_action(user_id, "upload_video")
             
@@ -331,7 +331,7 @@ class DB_Manager:
                 result = "\n".join(owned) if owned else "У тебя пока нет артефактов."
                 profile_text += f"\n🧿* Артефакты:*\n{result}"
            
-            if house >= 3:
+            if house >= 2:
                 firearms, pickaxe, axe, knight = self.lvl_weapons(user)
                 profile_text += (
                 f"\n🏠 Поселение: {user[15]}\n"
@@ -356,16 +356,17 @@ class DB_Manager:
                     ))
                 markup.add(*buttons)
 
-        bot.send_message(user_id, profile_text, parse_mode="Markdown")
+            bot.send_message(user_id, profile_text, parse_mode="Markdown")
                      
 
         if isinstance(house, int) and house > 0:
-            house_photo = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\lvl{house}.jpg"
+           
+            house_photo = os.path.join("images", f"lvl{house}.jpg")
             try:
                 with open(house_photo, "rb") as f:
-                    bot.send_photo(user_id, f, reply_markup=markup)
-            except FileNotFoundError:
-                bot.send_message(user_id, "🏠 Картинка дома не найдена.", reply_markup=markup)
+                    bot.send_photo(user_id, f, reply_markup=markup, timeout=30)
+            except Exception:
+                bot.send_message(user_id, "Изза нестабильного подключения не получается отправить дом", reply_markup=markup)
             
                     
     def story_0(self, message):
@@ -394,10 +395,13 @@ class DB_Manager:
         bot.send_message(user_id, """*Бог:* Скоро ты построишь себе новый дом, но сначала, иди ка ты на охоту, ты очень голодный, тебе стоило бы поесть, поэтому нажми в меню на кнопку *Охота*, чтобы добыть еды""", parse_mode="Markdown", reply_markup=markup)
         with self.conn:
          cur.execute("UPDATE users SET interaction = false WHERE user_id = ?", (user_id,))
-        god = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\god.jpg"
-        if os.path.exists(god):
+        god = os.path.join("images", "god.jpg")
+        try:
          with open(god, "rb") as f:
-          bot.send_photo(user_id, f)
+          bot.send_photo(user_id, f, timeout=30)
+        except Exception:
+            bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
+        
 
     def get_user_weapon(self, user_id):
         cur = self.conn.cursor()
@@ -625,10 +629,13 @@ class DB_Manager:
                 bot.send_message(user_id, f"🏠 *Дом*\n\n Следующий уровень: *{house_lvl + 1}*\n 💰 Золото: {gold_cost} (у вас: {gold})\n 🌲 Дерево: {wood_cost} (у вас: {wood})\n🪨 Камень: {stone_cost} (у вас: {stone})\n\n", parse_mode="Markdown", reply_markup=markupp)
         else:
             bot.send_message(user_id, "🏚️ Максимальный уровень дома достигнут.")
-            house_photo = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\5.jpg"
-            if os.path.exists(house_photo):
+            house_photo = os.path.join("images", "5.jpg")
+            try:
                 with open(house_photo, "rb") as f:
-                    bot.send_photo(user_id, f)
+                    bot.send_photo(user_id, f, timeout=30)
+            except Exception:
+                bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
+            
     
     def house_bought(self, call):
       user_id = call.message.chat.id
@@ -660,10 +667,13 @@ class DB_Manager:
             self.conn.commit()
 
             bot.send_message(user_id, f"🎉 Вы построили дом уровня {house_lvl + 1}!\nВаш баланс: 🏅 {gold - gold_cost}, 🪵 {wood - wood_cost}, 🪨 {stone - stone_cost}")
-            house_photo = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\lvl{house_lvl + 1}.jpg"
-            if os.path.exists(house_photo):
+            house_photo = os.path.join("images", f"lvl{house_lvl + 1}.jpg")
+            
+            try:
                 with open(house_photo, "rb") as f:
-                    bot.send_photo(user_id, f)
+                    bot.send_photo(user_id, f, timeout=30)
+            except Exception:
+                bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
 
             if story == 2:
                 markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -1137,10 +1147,13 @@ class DB_Manager:
              with self.conn:
               cur = self.conn.cursor()
               cur.execute("UPDATE users SET story = 6, interaction = false WHERE user_id = ?", (user_id,))             
-              Zolik = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\mrZolo.jpg"
-              if os.path.exists(Zolik):
+              Zolik = os.path.join("images", "mrZolo.jpg")
+              try:
+               if os.path.exists(Zolik):
                 with open(Zolik, "rb") as f:
-                    bot.send_photo(user_id, f)
+                    bot.send_photo(user_id, f, timeout=30)
+              except Exception:
+                    bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
 
     def story_lvl3(self, message):        
        user_id = message.chat.id
@@ -1164,10 +1177,12 @@ class DB_Manager:
        let_in = types.InlineKeyboardButton("Впустить Марию Ивановну", callback_data="LetInDora")
        markup.add(let_in)
        bot.send_message(user_id, "*Мария Ивановна: *Здраствуйте, меня зовут Мария Ивановна, раньше я была учительницой математики, но из-за зомби апокалипсиса я потеряла всё что у меня есть включая мою семью. Впустите меня пожалуйста в дом.", parse_mode="Markdown")
-       matematichka = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\matematichka.jpg"
-       if os.path.exists(matematichka):
-        with open(matematichka, "rb") as f:
-          bot.send_photo(user_id, f, reply_markup=markup)
+       matematichka = os.path.join("images", "matematichka.jpg")
+       try:
+         with open(matematichka, "rb") as f:
+          bot.send_photo(user_id, f, reply_markup=markup, timeout=30)
+       except Exception:
+            bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
 
     def Ivan_Dora_plan(self, message):
        user_id = message.chat.id 
@@ -1179,10 +1194,13 @@ class DB_Manager:
        with self.conn:
         cur = self.conn.cursor()
         cur.execute("UPDATE users SET story = 8, interaction = false WHERE user_id = ?", (user_id,))
-       dorazolo = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\ZoloDora.jpg"
-       if os.path.exists(dorazolo):
-        with open(dorazolo, "rb") as f:
-          bot.send_photo(user_id, f)
+       dorazolo = os.path.join("images", "ZoloDora.jpg")
+       try:
+        if os.path.exists(dorazolo):
+         with open(dorazolo, "rb") as f:
+          bot.send_photo(user_id, f, timeout=30)
+       except Exception:
+            bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
     
     def story_lvl4(self, message):      
        user_id = message.chat.id
@@ -1193,10 +1211,13 @@ class DB_Manager:
        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
        markup.add("Профиль", "Охота", "Улучшить дом", "Путешествие", "Артефакты", "Поселение")
        bot.send_message(user_id, "*Проф. Иван Золо: * Молодец что смог улучшить дом, благодаря тебе я продвинул свои иследования ещё дальше. Кстати, тебе открылись ещё по 2 уровня на каждом уровне прокачки твоего оружия. Поверь мне, нам осталось ещё немного", parse_mode="Markdown", reply_markup=markup)
-       Zolik4 = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\zolik4lvl.jpg"
-       if os.path.exists(Zolik4):
-        with open(Zolik4, "rb") as f:
-          bot.send_photo(user_id, f)
+       Zolik4 = os.path.join("images", "zolik4lvl.jpg")
+       try:
+        if os.path.exists(Zolik4):
+         with open(Zolik4, "rb") as f:
+           bot.send_photo(user_id, f, timeout=30)
+       except Exception:
+          bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
         
        with self.conn:
         cur = self.conn.cursor()
@@ -1215,10 +1236,13 @@ class DB_Manager:
        ok = types.InlineKeyboardButton("Выйти на охоту", callback_data="HuntWithZolo")
        markup.add(ok)
        population = user[14]
-       Zolik5 = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\zolikAndDora5lvl.jpg"
-       if os.path.exists(Zolik5):
-        with open(Zolik5, "rb") as f:
-          bot.send_photo(user_id, f)
+       Zolik5 = os.path.join("images", "zolikAndDora5lvl.jpg")
+       try:
+        if os.path.exists(Zolik5):
+         with open(Zolik5, "rb") as f:
+          bot.send_photo(user_id, f, timeout =30)
+       except Exception:
+                  bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
        if population >= 8:
         bot.send_message(user_id, f"*Проф. Золо:* Эх, друг мой, смотри как жизнь налаживается, осталось буквально найти последний артефакт, который поможет восстановаить цивилизацию и вылечить всех людей на этой земле, да и с Дорой у нас дела хорошо идут, посмотри как мы развили наше поселение, аж {population} человек! Я тут заметил, уж что то слишком долго меня на свежем воздухе не было, уж сликом я работал много, давай ка по братский пойдем все вместе на охоту? ",reply_markup=markup, parse_mode="Markdown")
        else:
@@ -1237,19 +1261,21 @@ class DB_Manager:
          bot.send_message(user_id, "_Зомби выходит из деревьев и рычит:_", parse_mode="MarkdownV2")
          time.sleep(1.5)
          bot.send_message(user_id, "*АААААААРГХХХХХХ!*", parse_mode="Markdown")
-         zombie = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\zombiemutant.jpg"
-         if os.path.exists(zombie):
-          with open(zombie, "rb") as f:
-           bot.send_photo(user_id, f)
+         zombie = os.path.join("images", "zombiemutant.jpg")
+         try:
+          if os.path.exists(zombie):
+           with open(zombie, "rb") as f:
+            bot.send_photo(user_id, f, timeout=30)
+         except Exception:
+            bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
          time.sleep(3)
          bot.send_message(user_id, "*Дора:* АААААААА УЛЕТАЕМ НА ГАИТИ", parse_mode="Markdown")
-         doragaity = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\doragaity.mp4"
+         doragaity = os.path.join("images", "doragaity.mp4")
          if os.path.exists(doragaity):
             try:
                 with open(doragaity, "rb") as f:
                     bot.send_video(user_id, f, timeout=90) 
             except Exception as e:
-                print(f"Error: {e}")
                 bot.send_message(user_id, "(Не получается скинуть видео изза нестабильного интернета)")
          time.sleep(3)
          markup = types.InlineKeyboardMarkup()
@@ -1258,10 +1284,14 @@ class DB_Manager:
          markup.add(no_blyat, blyat)
          attention = bot.send_message(user_id, "*Внимание:* Ты можешь выбрать продолжение без матов и с матами (*НЕ* влияет на сюжет)!", parse_mode="Markdown", reply_markup=markup)
          attention_id = attention.message_id
-         godrock = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\godrock.jpg"
-         if os.path.exists(godrock):
-          with open(godrock, "rb") as f:
-           bot.send_photo(user_id, f)
+         godrock = os.path.join("images", "godrock.jpg")
+         try:
+          if os.path.exists(godrock):
+           with open(godrock, "rb") as f:
+            bot.send_photo(user_id, f, timeout=30)
+         except Exception:
+            bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
+
          bl = 0
          for i in range(120):
             time.sleep(1)
@@ -1290,10 +1320,9 @@ class DB_Manager:
            time.sleep(2)
            bot.send_message(user_id, "*Ты в мыслях:* Почему она улетела сама а нас оставила здесь, это же предательство!", parse_mode="Markdown")
          elif bl == 2:
-             Jesus = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\Jesus.jpg" 
-             if os.path.exists(Jesus):
-              with open(Jesus, "rb") as f:
-               bot.send_photo(user_id, f)
+             Jesus = os.path.join("images", "Jesus.jpg")
+             with open(Jesus, "rb") as f:
+               bot.send_photo(user_id, f, timeout=30)
 
              time.sleep(2)
 
@@ -1340,28 +1369,25 @@ class DB_Manager:
              case 2:
                  bot.send_message(user_id, "*Ты:* На нахуй зомби мутант ебанный!!!", parse_mode="Markdown")
          
-       mutant = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\mutantDead.jpg" 
-       if os.path.exists(mutant):
+       mutant = os.path.join("images", "mutantDead.jpg")
+       try:
           with open(mutant, "rb") as f:
-            bot.send_photo(user_id, f)
+            bot.send_photo(user_id, f, timeout=30)
+       except Exception:
+                  bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
         
        time.sleep(2)
 
        bot.send_message(user_id, "_Ты связываешь Ивана Золо и забираешь его на базу_ ", parse_mode="Markdown")
 
-       zoloZombie = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\ZoloDead.jpg" 
-       if os.path.exists(zoloZombie):
-          with open(zoloZombie, "rb") as f:
-            bot.send_photo(user_id, f)
-       
        time.sleep(2)
        bot.send_message(user_id, "_Ты возвращаешься домой_ ", parse_mode="Markdown")
 
-       house = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\lvl5.jpg" 
+       house = os.path.join("images", "lvl5.jpg") 
        try:
             if os.path.exists(house):
                 with open(house, "rb") as f:
-                 bot.send_photo(user_id, f)
+                 bot.send_photo(user_id, f, timeout=30)
             else:
                 print(f"Картинка не найдена: {house}")
        except Exception as e:
@@ -1375,13 +1401,15 @@ class DB_Manager:
        bot.send_message(user_id, "_Дора плавно лезит к тебе вниз_", parse_mode="Markdown")
        time.sleep(2)
        bot.send_message(user_id, "*Дора:* А теперь мы проверим, карлик ли у тебя или нет😈", parse_mode="Markdown")
-       dora_horny = f"C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\doraHorny.jpg"
-       if os.path.exists(dora_horny):
+       dora_horny = mutant = os.path.join("images", "doraHorny.jpg")
+       try:
           with open(dora_horny, "rb") as f:
             markup = types.InlineKeyboardMarkup()
             stop_mne_nepriatno = types.InlineKeyboardButton("✋ Остановить Дору", callback_data="stop_dora")
             markup.add(stop_mne_nepriatno)
-            bot.send_photo(user_id, f, reply_markup=markup)
+            bot.send_photo(user_id, f, reply_markup=markup, timeout=30)
+       except Exception:
+                  bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
 
     def stop_dora(self, message):
         user_id = message.chat.id
@@ -1395,7 +1423,7 @@ class DB_Manager:
         bot.send_message(user_id, "*Ты:* И что же мне нужно будет сделать?", parse_mode="Markdown")
         time.sleep(2)  
         markup = types.InlineKeyboardMarkup()
-        listen_dora = types.InlineKeyboardButton("Выслушать Дору", callback_data="listen_dora")  
+        listen_dora = types.InlineKeyboardButton("👂 Выслушать Дору", callback_data="listen_dora")  
         markup.add(listen_dora)
         bot.send_message(user_id, "*Дора:* Перед тем, как кидать меня на произвол судьбы, выслушай меня  внимательно, Иванушка разказал мне всё, что он планировал сделать:", parse_mode="Markdown", reply_markup=markup)
 
@@ -1403,26 +1431,148 @@ class DB_Manager:
         user_id = message.chat.id
         user = self.select_user(message)
         bot.send_message(user_id, "*Дора:* И так, чтобы сделать сыворотку от вируса, нам осталось собрать только 2 артефакта, а именно иголку Лирили Ларила и бомбу Бомбардиро крокодило, дальше нам нужно будет смешать все артефакты в лабаратории профессора Ивана Золо, дальше Профессор золо скопирует сыворотку до поизводственного количества и сбросит её по всему миру, так мы сможем спасти весь мир, только пожалуйста не бросай меня к зомби", parse_mode="Markdown")
-        time.sleep(10)
+        time.sleep(13)
         bot.send_message(user_id, "*Дора:* Теперь делай со мной что хочешь", parse_mode="Markdown")
         time.sleep(3)
         bot.send_message(user_id, "*Ты:* Значит так, за предательство Ивана Золо, мне придётся принять меры, и моё решение кинуть тебя в подвал и будешь ты жить рядом с клеткой Ивана, пока я не найду последний артефакт, а дальше уже сам Ваня решит, по каким рельсам пойдёт твоя судьба дальше", parse_mode="Markdown")
-        time.sleep(8)
-        prison = "C:\\Users\\Admin\\OneDrive\\Desktop\\simulator\\images\\prison.png"
-        if os.path.exists(prison):
+        time.sleep(10)
+        prison = mutant = os.path.join("images", "prison.png")
+        try:
                 with open(prison, "rb") as f:
-                  bot.send_photo(user_id, f)
+                  bot.send_photo(user_id, f, timeout=30)
+        except Exception:
+           bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        markup.add("Профиль", "Охота", "Путешествие", "Артефакты", "Концовка")
+        markup.add("Профиль", "Охота", "Путешествие", "Артефакты", "Смешать артефакты")
         bot.send_message(user_id, "_Когда ты соберерёшь все артефакты нажми в меню на «Смешать артефакты» чтобы спасти Ивана Золо_", parse_mode="Markdown", reply_markup=markup)
 
         with self.conn:
                 cur = self.conn.cursor()
                 cur.execute("UPDATE users SET story = 12, interaction = 0 WHERE user_id = ?", (user_id,))
 
-        # продолжение следует
+
+    def end(self, message):
+       user_id = message.chat.id
+       user = self.select_user(message)
+       if user:
+          if user[13]:
+            return
+       with self.conn:
+          cur = self.conn.cursor()
+          cur.execute("SELECT COUNT(*) FROM user_artifacts WHERE user_id = ?", (user_id,))
+          user_count = cur.fetchone()[0]
+          if user_count < 10:
+                bot.send_message(user_id, "❌ Вы не собрали все артефакты",parse_mode="Markdown")
+                return
+          elif user_count > 10:
+                bot.send_message(user_id, "Ошибка, артефактов больше чем должно юыло быть",parse_mode="Markdown")
+                return
+          else:
+                cur.execute("UPDATE users SET interaction = 1, story = 13 WHERE user_id = ?", (user_id,))           
+                mix = os.path.join("images", "mix.png")
+                try: 
+                      with open(mix, "rb") as f:
+                         bot.send_photo(user_id, f, timeout=30)
+                except Exception:
+                           bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
+
+                
+                bot.send_message(user_id, "_Сыворотка готовится_",parse_mode="Markdown")
+                time.sleep(2)
+                for i in [3,2,1]:
+                    bot.send_message(user_id, f"*{i}*",parse_mode="Markdown")
+                    time.sleep(1)
+                markup = types.InlineKeyboardMarkup()
+                resque_zolo = types.InlineKeyboardButton("Спасти Ивана", callback_data="resque_zolo")
+                markup.add(resque_zolo)
+                bot.send_message(user_id, "_Сыворотка готова_",parse_mode="Markdown", reply_markup=markup)
+                
+    def zolo_resqued(self, message):
+       user_id = message.chat.id
+       user = self.select_user(message)
 
 
+       ######## !!!!!!!!!!!!
+
+    #    zolo_resqued = os.path.join("images", "zoloResqued.png")
+    #    try:
+    #     with open(zolo_resqued, "rb") as f:
+    #        bot.send_photo(user_id, f, timeout=30)
+    #    except Exception:
+    #       bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
+          
+        ####### !!!!!!!!!!!!!   
+
+       bot.send_message(user_id, "*Проф. Золо:* Ч-ч-что это было... Где я...", parse_mode="Markdown")    
+       time.sleep(3)   
+       bot.send_message(user_id, "*Дора:* Урааааа! Иванушка, солнце моё, ты спасён!", parse_mode="Markdown")  
+       time.sleep(3)
+       bot.send_message(user_id, "*Проф. Золо:* О боже, вы спасли меня, спасибо большое! Только почему Дора сидит в клетке? Выпусти её!", parse_mode="Markdown") 
+       time.sleep(5)
+       bot.send_message(user_id, "*Ты:* Мне очень жаль, но придётся рассказать тебе плохую новость...", parse_mode="Markdown")  
+       time.sleep(3.5)
+       bot.send_message(user_id, "*Ты:* Она убежала без нас на базу, изза этого мутант зомби укусил тебя и ты превратился в зомби. Позде когда я вернулся с тобой Дора встретила нас и полезла мне в штаны. Так как и я лоялен к тебе я хотел сначала бросить её на улицу, но она рассказала о тех самых артефактах благодаря которым мы тебя спасли. А ещё она сказала что у тебя карлик внизу поэтому и захотела полезть ко мне. ", parse_mode="Markdown")
+       time.sleep(14) 
+       bot.send_message(user_id, "*Ты:* А теперь сам решай будешь ли ты оставлять её здесь или нет...", parse_mode="Markdown") 
+       time.sleep(5.5)
+       bot.send_message(user_id, "*Проф. золо:* Знаешь дора, а иди ты в жопу! Отавляй её в клетке", parse_mode="Markdown")
+       time.sleep(4)
+       bot.send_message(user_id, "*Дора:* За что вы так со мной😔", parse_mode="Markdown")
+       time.sleep(4)
+       markup = types.InlineKeyboardMarkup()
+       listen_zolo = types.InlineKeyboardButton("👂 Выслушать Проф. Золо", callback_data="listen_zolo")
+       markup.add(listen_zolo)
+       bot.send_message(user_id, "*Проф. золо:* А теперь я расскажу тебе какие у нас планы на спасение мира", parse_mode="Markdown", reply_markup=markup)
+
+
+
+    def listen_zolo(self, message):
+       user_id = message.chat.id
+       user = self.select_user(message)
+       bot.send_message(user_id, "*Проф. золо:*  Слушай меня меня внимательно, сейчас нам нужно поехать в корпорацию Илона Баскова", parse_mode="Markdown")
+       ##### !!!!!!!!!!
+       space_baskov = os.path.join("images", "space_baskov.png")
+       try:
+          with open(space_baskov, "rb") as f:
+             bot.send_photo(user_id, f, timeout=30)
+       except Exception:
+          bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
+       ##### !!!!!!!!!!    
+       time.sleep(3)
+       bot.send_message(user_id, "*Ты:* И как мы туда попадём?", parse_mode="Markdown")   
+       time.sleep(3)
+       markup = types.InlineKeyboardMarkup()
+       go = types.InlineKeyboardButton("Отправиться в с Иваном Золо", callback_data="go_with_zolo")
+       markup.add(go)
+       bot.send_message(user_id, "*Проф. Золо:* Сначала нужно добраться до города а потом мы должны поехать в аэропорт и найти там частный самолёт, потом я знаю куда лететь, главное самолёт найти а дальше сориентируемся", parse_mode="Markdown", reply_markup=markup)
+
+    def go_with_zolo(self, message):
+        user_id = message.chat.id
+        user = self.select_user(message)
+        zoloNagievDrive = os.path.join("images", "zoloNagievDrive.jpg")
+        na_diskoteku = os.path.join("images", "na_diskoteku.mp3")
+        try:
+            with open(zoloNagievDrive, "rb") as f:
+                bot.send_photo(user_id, f, timeout=30)
+        except Exception:
+                    bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
+        try:
+            with open(na_diskoteku, "rb") as f:
+                bot.send_audio(user_id, f, title="На дискотеку", performer="Султан - Ураган и Мурат Тхагалегов", timeout=30)
+        except Exception:
+                    bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить аудио")
+        
+      
+
+
+
+
+
+       # Продолжение следует
+       
+
+
+    
   
         
     def get_user_artifacts(self, user_id):
@@ -1458,7 +1608,9 @@ class DB_Manager:
         row = cur.fetchone()
         house_level = row[0] if row else 1
 
-        if house_level == 2:
+        if not available:
+            chance_text = "0% (Все артефакты собраны)"
+        elif house_level == 2:
             chance_text = "1 из 2 (50%)"
         elif house_level == 3:
             chance_text = "1 из 3 (~33%)"
@@ -1467,7 +1619,7 @@ class DB_Manager:
         elif house_level >= 5:
             chance_text = "1 из 5 (20%)"
         else:
-            chance_text = "Нет шанса (нужен дом выше)"
+            chance_text = "0%"
         
         result = "*🗿 Ваши артефакты:*\n"
         if owned:
