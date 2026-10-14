@@ -1511,11 +1511,21 @@ class DB_Manager:
        time.sleep(5)
        bot.send_message(user_id, "*Ты:* Мне очень жаль, но придётся рассказать тебе плохую новость...", parse_mode="Markdown")  
        time.sleep(3.5)
-       bot.send_message(user_id, "*Ты:* Она убежала без нас на базу, изза этого мутант зомби укусил тебя и ты превратился в зомби. Позде когда я вернулся с тобой Дора встретила нас и полезла мне в штаны. Так как и я лоялен к тебе я хотел сначала бросить её на улицу, но она рассказала о тех самых артефактах благодаря которым мы тебя спасли. А ещё она сказала что у тебя карлик внизу поэтому и захотела полезть ко мне. ", parse_mode="Markdown")
-       time.sleep(14) 
+       nagiev_bad_news = os.path.join("voices", "story13_nagiev.mp3")
+       try:
+            with open(nagiev_bad_news, "rb") as f:
+                 bot.send_audio(user_id, f, title="Дмитрий Нагиев", performer="TheLastSurvivor", timeout=30)
+       except Exception:
+          bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить аудио")
+       time.sleep(32) 
        bot.send_message(user_id, "*Ты:* А теперь сам решай будешь ли ты оставлять её здесь или нет...", parse_mode="Markdown") 
        time.sleep(5.5)
-       bot.send_message(user_id, "*Проф. золо:* Знаешь дора, а иди ты в жопу! Отавляй её в клетке", parse_mode="Markdown")
+       zolo_aura = os.path.join("voices", "story13_zolo.mp3")
+       try:
+          with open(zolo_aura, "rb") as f:
+             bot.send_audio(user_id, f, title="Иван Золо", performer="TheLastSurvivor", timeout=30)
+       except Exception:
+          bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить аудио")
        time.sleep(4)
        bot.send_message(user_id, "*Дора:* За что вы так со мной😔", parse_mode="Markdown")
        time.sleep(4)
@@ -1561,7 +1571,16 @@ class DB_Manager:
                 bot.send_audio(user_id, f, title="На дискотеку", performer="Султан - Ураган и Мурат Тхагалегов", timeout=30)
         except Exception:
                     bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить аудио")
-        
+        time.sleep(4)
+
+        frames = ["⬜⬜⬜⬜⬜⬜", "⬛⬜⬜⬜⬜⬜", "⬛⬛⬜⬜⬜⬜", "⬛⬛⬛⬜⬜⬜", "⬛⬛⬛⬛⬜⬜", "⬛⬛⬛⬛⬛⬜", "⬛⬛⬛⬛⬛⬛"]
+        time.sleep(0.7)
+        msg = bot.send_message(user_id, frames[0], parse_mode="Markdown")
+        for frame in frames[1:]:
+           bot.edit_message_text(chat_id=user_id, message_id=msg.message_id, text=frame, parse_mode="Markdown")
+           time.sleep(0.7)
+        bot.send_message(user_id, "*Проф. Золо:* Мы добрались до города", parse_mode="Markdown")
+        time.sleep(3)
       
 
 
