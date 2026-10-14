@@ -196,6 +196,8 @@ def handle_call_back(call):
      if call.data == "go_with_zolo":
         manager.go_with_zolo(call.message)
         return
+     if call.data == "arrive":
+        manager.arrive(call.message)
 
      
 

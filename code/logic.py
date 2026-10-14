@@ -1526,7 +1526,7 @@ class DB_Manager:
              bot.send_audio(user_id, f, title="Иван Золо", performer="TheLastSurvivor", timeout=30)
        except Exception:
           bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить аудио")
-       time.sleep(4)
+       time.sleep(12)
        bot.send_message(user_id, "*Дора:* За что вы так со мной😔", parse_mode="Markdown")
        time.sleep(4)
        markup = types.InlineKeyboardMarkup()
@@ -1571,19 +1571,72 @@ class DB_Manager:
                 bot.send_audio(user_id, f, title="На дискотеку", performer="Султан - Ураган и Мурат Тхагалегов", timeout=30)
         except Exception:
                     bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить аудио")
-        time.sleep(4)
-
-        frames = ["⬜⬜⬜⬜⬜⬜", "⬛⬜⬜⬜⬜⬜", "⬛⬛⬜⬜⬜⬜", "⬛⬛⬛⬜⬜⬜", "⬛⬛⬛⬛⬜⬜", "⬛⬛⬛⬛⬛⬜", "⬛⬛⬛⬛⬛⬛"]
-        time.sleep(0.7)
-        msg = bot.send_message(user_id, frames[0], parse_mode="Markdown")
-        for frame in frames[1:]:
-           bot.edit_message_text(chat_id=user_id, message_id=msg.message_id, text=frame, parse_mode="Markdown")
-           time.sleep(0.7)
+        time.sleep(10)
+        self.loading(user_id)
         bot.send_message(user_id, "*Проф. Золо:* Мы добрались до города", parse_mode="Markdown")
+        time.sleep(4)
+        bot.send_message(user_id, "*Ты:* И что теперь?", parse_mode="Markdown")
+        time.sleep(3) 
+        bot.send_message(user_id, "*Проф. Золо:* Видишь аэропорт? Идём туда", parse_mode="Markdown")
+        time.sleep(4)
+        #####!!!!!!!!!!!!
+        airport = os.path.join("images", "airport.png")
+        try:
+           with open(airport, "rb") as f:
+              bot.send_photo(user_id, f, timeout=30)
+        except Exception:
+           bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
+        #####!!!!!!!!!!!!
+        time.sleep(6)
+        self.loading(user_id)
+        time.sleep(user_id, "__Вы нашли первый попавшийся самолёт__", parse_mode="Markdown")
+        time.sleep(5)
+        bot.send_message(user_id, "*Проф. Золо: Я знаю как этот апарат работает, сейчас взлетим*", parse_mode="Markdown")
+        time.sleep(6)
+        bot.send_message(user_id, "*Ты:* Иван ты только нас не разбей", parse_mode="Markdown")
+        time.sleep(5)
+        bot.send_message(user_id, "__Двигатель рычит, самолёт взлетает__", parse_mode="Markdown")
         time.sleep(3)
-      
+        #####!!!!!!!!!!!!
+        airplane = os.path.join("images", "airplane.png")
+        try:
+            with open(airplane, "rb") as f:
+                bot.send_photo(user_id, f, timeout=30)
+        except Exception:
+                bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
+        #####!!!!!!!!!!!!
+        
+        radio = os.path.join("images" "baobab_radio.mp3")
+        try:
+           with open(radio, "rb") as f:
+              bot.send_photo(user_id, f, timeout=30)
+        except Exception:
+           bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
+        #####!!!!!!!!!!!!
+        time.sleep(12)
 
-        # Andreas Mandl
+        bot.send_message(user_id, "__Вы прилетите через:__", parse_mode="Markdown")
+
+        for i in range(5, -1, 1):
+           bot.send_message(user_id, f"*{i}*")
+           time.sleep(1)
+
+        markup = types.InlineKeyboardMarkup()
+        arrive = types.InlineKeyboardButton("Выйти из самолёта", callback_data="arrive")
+        markup.add(arrive)
+        bot.send_message(user_id, "__Вы прилетели__", parse_mode="Markdown", reply_markup=markup)
+
+    def baskow_company(self, message):
+       user_id = message.chat.id
+       user = self.select_user(message)
+
+       bot.send_message("Garry Lang")
+        
+        
+        
+
+
+
 
 
 
@@ -1592,8 +1645,14 @@ class DB_Manager:
 
 
     
-  
-        
+    def loading(self, user_id):
+       frames = ["⬜⬜⬜⬜⬜⬜", "⬛⬜⬜⬜⬜⬜", "⬛⬛⬜⬜⬜⬜", "⬛⬛⬛⬜⬜⬜", "⬛⬛⬛⬛⬜⬜", "⬛⬛⬛⬛⬛⬜", "⬛⬛⬛⬛⬛⬛"]
+       time.sleep(0.7)
+       msg = bot.send_message(user_id, frames[0], parse_mode="Markdown")
+       for frame in frames[1:]:
+            bot.edit_message_text(chat_id=user_id, message_id=msg.message_id, text=frame, parse_mode="Markdown")
+            time.sleep(0.7)
+
     def get_user_artifacts(self, user_id):
      with self.conn:
         user = self.select_user_by_id(user_id) 
