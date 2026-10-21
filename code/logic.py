@@ -6,6 +6,9 @@ import time
 import random
 from datetime import datetime, timedelta
 
+token = "7467234420:AAHbISAKnCgTPPtz50uwVH4INrmuyyCDg1w"
+database = "database.db"
+
 bot = TeleBot(token)
 
 class DB_Manager:
@@ -1548,7 +1551,7 @@ class DB_Manager:
        except Exception:
           bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
        ##### !!!!!!!!!!    
-       time.sleep(3)
+       time.sleep(7)
        bot.send_message(user_id, "*Ты:* И как мы туда попадём?", parse_mode="Markdown")   
        time.sleep(3)
        markup = types.InlineKeyboardMarkup()
@@ -1589,13 +1592,13 @@ class DB_Manager:
         #####!!!!!!!!!!!!
         time.sleep(6)
         self.loading(user_id)
-        time.sleep(user_id, "__Вы нашли первый попавшийся самолёт__", parse_mode="Markdown")
+        bot.send_message(user_id, "_Вы нашли первый попавшийся самолёт_", parse_mode="Markdown")
         time.sleep(5)
         bot.send_message(user_id, "*Проф. Золо: Я знаю как этот апарат работает, сейчас взлетим*", parse_mode="Markdown")
         time.sleep(6)
         bot.send_message(user_id, "*Ты:* Иван ты только нас не разбей", parse_mode="Markdown")
         time.sleep(5)
-        bot.send_message(user_id, "__Двигатель рычит, самолёт взлетает__", parse_mode="Markdown")
+        bot.send_message(user_id, "_Двигатель рычит, самолёт взлетает_", parse_mode="Markdown")
         time.sleep(3)
         #####!!!!!!!!!!!!
         airplane = os.path.join("images", "airplane.png")
@@ -1606,16 +1609,16 @@ class DB_Manager:
                 bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
         #####!!!!!!!!!!!!
         
-        radio = os.path.join("images" "baobab_radio.mp3")
+        radio = os.path.join("images", "baobab_radio.mp3")
         try:
            with open(radio, "rb") as f:
-              bot.send_photo(user_id, f, timeout=30)
+              bot.send_audio(user_id, f, timeout=30)
         except Exception:
            bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
         #####!!!!!!!!!!!!
         time.sleep(12)
 
-        bot.send_message(user_id, "__Вы прилетите через:__", parse_mode="Markdown")
+        bot.send_message(user_id, "_Вы прилетите через:_", parse_mode="Markdown")
 
         for i in range(5, -1, 1):
            bot.send_message(user_id, f"*{i}*")
@@ -1624,7 +1627,7 @@ class DB_Manager:
         markup = types.InlineKeyboardMarkup()
         arrive = types.InlineKeyboardButton("Выйти из самолёта", callback_data="arrive")
         markup.add(arrive)
-        bot.send_message(user_id, "__Вы прилетели__", parse_mode="Markdown", reply_markup=markup)
+        bot.send_message(user_id, "_Вы прилетели_", parse_mode="Markdown", reply_markup=markup)
 
     def baskow_company(self, message):
        user_id = message.chat.id
