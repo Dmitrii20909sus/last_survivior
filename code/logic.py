@@ -6,9 +6,6 @@ import time
 import random
 from datetime import datetime, timedelta
 
-token = "7467234420:AAHbISAKnCgTPPtz50uwVH4INrmuyyCDg1w"
-database = "database.db"
-
 bot = TeleBot(token)
 
 class DB_Manager:
@@ -1551,7 +1548,7 @@ class DB_Manager:
        except Exception:
           bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
        ##### !!!!!!!!!!    
-       time.sleep(7)
+       time.sleep(3)
        bot.send_message(user_id, "*Ты:* И как мы туда попадём?", parse_mode="Markdown")   
        time.sleep(3)
        markup = types.InlineKeyboardMarkup()
@@ -1594,7 +1591,7 @@ class DB_Manager:
         self.loading(user_id)
         bot.send_message(user_id, "_Вы нашли первый попавшийся самолёт_", parse_mode="Markdown")
         time.sleep(5)
-        bot.send_message(user_id, "*Проф. Золо: Я знаю как этот апарат работает, сейчас взлетим*", parse_mode="Markdown")
+        bot.send_message(user_id, "*Проф. Золо:* Я знаю как этот апарат работает, сейчас взлетим", parse_mode="Markdown")
         time.sleep(6)
         bot.send_message(user_id, "*Ты:* Иван ты только нас не разбей", parse_mode="Markdown")
         time.sleep(5)
@@ -1609,19 +1606,19 @@ class DB_Manager:
                 bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
         #####!!!!!!!!!!!!
         
-        radio = os.path.join("images", "baobab_radio.mp3")
+        radio = os.path.join("images", "alt_radio.mp3")
         try:
            with open(radio, "rb") as f:
-              bot.send_audio(user_id, f, timeout=30)
+              bot.send_audio(user_id, f, title="Альтушка", performer="Иван Золо", timeout=30)
         except Exception:
-           bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить фото")
+           bot.send_message(user_id, "Изза нестабильного подключения не удаётся загрузить аудио")
         #####!!!!!!!!!!!!
         time.sleep(12)
 
         bot.send_message(user_id, "_Вы прилетите через:_", parse_mode="Markdown")
 
-        for i in range(5, -1, 1):
-           bot.send_message(user_id, f"*{i}*")
+        for i in range(5, -1, -1):
+           bot.send_message(user_id, f"*{i}*", parse_mode="Markdown")
            time.sleep(1)
 
         markup = types.InlineKeyboardMarkup()
@@ -1633,7 +1630,7 @@ class DB_Manager:
        user_id = message.chat.id
        user = self.select_user(message)
 
-       bot.send_message("Garry Lang")
+       bot.send_message(user_id,"Garry Lang")
         
         
         

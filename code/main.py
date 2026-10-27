@@ -4,9 +4,6 @@ from telebot import TeleBot, types
 import sqlite3
 import os
 
-token = "7467234420:AAHbISAKnCgTPPtz50uwVH4INrmuyyCDg1w"
-database = "database.db"
-
 bot = TeleBot(token)
 manager = DB_Manager(database)
 
